@@ -1,0 +1,26 @@
+<head>
+  <link rel="stylesheet" href="style.css" />
+  <title>{% block title %}{% endblock %}</title>
+  {% block html_head %}{% endblock %}
+</head>
+<body>
+  <header class="site-header">
+    <!-- Navbar-->
+    <nav class="navbar navbar-expand-md bg-green fixed-top">
+      <div class="container">
+        <a class="navbar-brand mr-4 text-light" href="/"><strong>Excel Plagiarism Tool</strong></a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggle" aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+          <div class="navbar-nav ml-auto">
+            <a class="nav-item nav-link text-dark" href="/logout">Logout</a>
+            <a class="nav-item nav-link text-dark" href="/settings">Settings</a>
+          </div>
+        </div>
+      </div>
+    </nav>
+  </header>
+  <div id="content">
+    {% block content %}{% endblock %}
+  </div>
+</body>
