@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+  <head>
+      <!-- Required meta tags -->
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+      <!-- Bootstrap CSS -->
+      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+      <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css') }}">
+      <title>Excel Plagiarism Tool</title>
+  </head>
+  <body class="body">
+    <header class="site-header">
+      <!-- Navbar-->
+      <nav class="navbar navbar-expand-md bg-green fixed-top">
+        <div class="container">
+          <a class="navbar-brand mr-4 text-light" href="/"><strong>Excel Plagiarism Tool</strong></a>
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggle" aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+            <div class="navbar-nav ml-auto">
+              <a class="nav-item nav-link text-dark" href="/logout">Logout</a>
+              <a class="nav-item nav-link text-dark" href="/settings">Settings</a>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <div class="container">
+      <!-- New Scan Form-->
+      <form>
+        <h3 class="text-light">New Scan</h3>
+        <div class="form-group">
+          <div class="form-group">
+            <div class="form-inline mb-2">
+              <input type="name" class="form-control col-8 mr-2" id="assignmentName" placeholder="Assignment Name..." required=true>
+              <span class="asterisk"></span>
+              <input type="name" class="form-control col-3" id="courseCode" placeholder="Course..." required=true>
+              <span class="asterisk"></span>
+            </div>
+            <!-- To get file name to populate the button text, we'd need to use jQuery to rewrite the text by getting the file_name from the button onchange event -->
+            <div>
+              <label for="templateFile" class="btn btn-secondary col-8 text-left">Select Template File...</label>
+              <!-- add d-none to class when jQuery implemented-->
+              <input type="file" id="templateFile" class="d-none">
+            </div>
+            <div>
+              <label for="excelFiles" class="btn btn-secondary col-8 text-left">Select Excel Files...</label>
+              <span class="asterisk"></span>
+              <!-- add d-none to class when jQuery implemented-->
+              <input type="file" id="excelFiles" class="d-none" required=true>
+            </div>
+          </div>
+          <button type="submit" class="btn bg-yellow float-right"><strong>Begin Scan</strong></button>
+        </div>
+      </form>
+      <br><br><br><br>
+      <div>
+        <div class="form-inline">
+          <h3 class="col text-light ml-0 pl-0">Previous Scans</h3>
+          <button class="btn bg-yellow col-1 col-offset-4 mr-2"><strong>View</strong></button>
+          <button class="btn btn-danger col-1"><strong>Delete</strong></button>
+        </div>
+      </div>
+      
+    </div>
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+  </body>
+</html>
