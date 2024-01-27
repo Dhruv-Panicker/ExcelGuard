@@ -15,7 +15,7 @@
   {% block content %}
   <div class="container">
     <!-- New Scan Form-->
-    <form>
+    <form action="/begin_scan" method="post" enctype="multipart/form-data">
       <h3 class="text-light">New Scan</h3>
       <div class="form-group">
         <div class="form-group">
@@ -29,13 +29,13 @@
           <div>
             <label for="templateFile" class="btn btn-secondary col-8 text-left">Select Template File...</label>
             <!-- add d-none to class when jQuery implemented-->
-            <input type="file" id="templateFile" class="d-none">
+            <input type="file" id="templateFile" name="templateFile" class="d-none" accept=".xls, .xlsx">
           </div>
           <div>
-            <label for="excelFiles" class="btn btn-secondary col-8 text-left">Select Excel Files...</label>
+            <label for="assignmentFiles" class="btn btn-secondary col-8 text-left">Select Excel Files...</label>
             <span class="asterisk"></span>
             <!-- add d-none to class when jQuery implemented-->
-            <input type="file" id="excelFiles" class="d-none" required=true>
+            <input type="file" id="assignmentFiles" name="assignmentFiles" class="d-none" accept=".xls, .xlsx" required=true>
           </div>
         </div>
         <button type="submit" class="btn bg-yellow float-right"><strong>Begin Scan  <span class="fas fa-arrow-right"></span></strong></button>
