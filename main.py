@@ -103,7 +103,7 @@ def begin_scan():
         os.makedirs(assignment_files_folder, exist_ok=True)
         assignment_file_path = os.path.join(assignment_files_folder, file.filename)
         file.save(assignment_file_path)
-        author_data_list = get_author_data(assignment_files)
+        author_data_list = column_data(assignment_files)
       except Exception as e:
         return f"Error processing the file: {str(e)}"
     print(f"{author_data_list}")
@@ -172,8 +172,8 @@ def column_data(excel_files):
             excel_sheet = excel_workbook[sheet_name]
             for column in excel_sheet.columns:
               width = excel_sheet.column_dimensions[column[0].column_letter].width
-              file_widths.append(width)
-      column_data_list.add(file_widths)
+              file_widths.add(width)
+      column_data_list.append(file_widths)
     except Exception as e:
       print(f"Error reading {file}: {str(e)}")
   return column_data_list
