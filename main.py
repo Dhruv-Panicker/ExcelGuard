@@ -103,7 +103,7 @@ def begin_scan():
         os.makedirs(assignment_files_folder, exist_ok=True)
         assignment_file_path = os.path.join(assignment_files_folder, file.filename)
         file.save(assignment_file_path)
-        author_data_list = column_data(assignment_files)
+        author_data_list = get_formula_data(assignment_files)
       except Exception as e:
         return f"Error processing the file: {str(e)}"
     print(f"{author_data_list}")
@@ -234,4 +234,26 @@ def get_link_data(excel_files):
 
 def get_formula_data(excel_files):
   formula_data_list = []
+  # Go through each file in the given list of excel files
+  for file in excel_files:
+    try:
+      # If the file has no filename, something went wrong
+      if file.filename == "":
+        print(f"Could not retrieve filename from {file}")
+      else:
+        # Otherwise save the file, open the workbook, and get the formula from every cell which contains a formula
+        if file:
+          file_formula_list = []
+          assignment_files_folder = "scan_assignment_uploads"
+          assignment_file_path = os.path.join(assignment_files_folder, file.filename)
+          excel_workbook = load_workbook(assignment_file_path)
+          for sheet_name in excel_workbook.sheetnames:
+            excel_sheet = excel_workbook[sheet_name]
+            for row in excel_sheet.iter_rows(min_row=1, max_col=excel_sheet.max_column, max_row=excel_sheet.max_row):
+              for cell in row:
+                if cell.data_type == "f":
+                  file_formula_list.append(cell.value)
+      formula_data_list.append(file_formula_list)
+    except Exception as e:
+      print(f"Error reading {file}: {str(e)}")
   return formula_data_list
