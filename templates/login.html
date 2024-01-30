@@ -1,19 +1,27 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
+<html>
+  {% block html_head %}
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
-</head>
-<body>
-    <h1>Login Page</h1>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css" integrity="sha384-lZN37f5QGtY3VHgisS14W3ExzMWZxybE1SJSEsQp9S+oqd12jhcu+A56Ebc1zFSJ" crossorigin="anonymous">
+
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css') }}">
+  {% endblock %}
+{% block content %}
+  <div class="container text-center">
+    <h1 class="text-light mb-5">Excel Spreadsheet Tool</h1>
 
     <form method="POST" action="">
-        {{ form.hidden_tag() }}
-        {{ form.username }}
-        {{ form.password }}
-        {{ form.submit }}
+      {{ form.hidden_tag() }}
+      {{ form.username }}
+      {{ form.password }}
+      <div class="center-block">
+        <button type="submit" class="btn bg-yellow mt-3"><strong>Login  <span class="fas fa-arrow-right"></span></strong></button>
+      </div>
     </form>
-    <a href="{{url_for('register')}}">Don't have an account? Sign Up</a><br>
-</body>
+    <br><strong><span class="text-light">Don't have an account? <a href="{{url_for('register')}}">Register here</a></span></strong><
+  </div>
+{% endblock %}
 </html>
