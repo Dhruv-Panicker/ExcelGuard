@@ -10,6 +10,7 @@ import os
 import pandas as pd
 from openpyxl import load_workbook
 from openpyxl.styles.fonts import Font
+import xml.etree.ElementTree as ET
 
 app = Flask(__name__)
 Bootstrap(app)
@@ -65,11 +66,11 @@ def register():
     except Exception as e:
       print("Failed to add user:", e) 
       return redirect(url_for("login"))
-    else:
-      print("Form not validated")  # Debugging message
-      print(form.errors)         
-    print("Database file path:", os.path.join(os.getcwd(), "database.db"))
-    return render_template("register.html", form=form)
+  else:
+    print("Form not validated")  # Debugging message
+    print(form.errors)         
+  print("Database file path:", os.path.join(os.getcwd(), "database.db"))
+  return render_template("register.html", form=form)
 
 @app.route("/scan_list")
 def scan_list(): 
@@ -103,7 +104,8 @@ def begin_scan():
         os.makedirs(assignment_files_folder, exist_ok=True)
         assignment_file_path = os.path.join(assignment_files_folder, file.filename)
         file.save(assignment_file_path)
-        author_data_list = get_formula_data(assignment_files)
+        print(f"Run")
+        author_data_list = get_chart_data(assignment_files)
       except Exception as e:
         return f"Error processing the file: {str(e)}"
     print(f"{author_data_list}")
@@ -223,14 +225,41 @@ def get_font_names(excel_files):
                 font = cell.font
                 if font.name not in file_font_names: 
                   file_font_names.add(font.name)
-      font_names_list.append(file_font_names)
+          font_names_list.append(file_font_names)
     except Exception as e:
       print(f"Error reading {file}: {str(e)}")
   return font_names_list
 
-def get_link_data(excel_files):
-  link_data_list = []
-  return link_data_list
+def get_chart_data(excel_files):
+  chart_data_list = []
+    # Go through each file in the given list of excel files
+  for file in excel_files:
+    try:
+      # If the file has no filename, something went wrong
+      if file.filename == "":
+        print(f"Could not retrieve filename from {file}")
+      else:
+        # Otherwise save the file, open the workbook, and get the formula from every cell which contains a formula
+        if file:
+          file_chart_list = []
+          assignment_files_folder = "scan_assignment_uploads"
+          assignment_file_path = os.path.join(assignment_files_folder, file.filename)
+          excel_workbook = load_workbook(assignment_file_path)
+          for drawing in excel_workbook.drawings:
+            if isinstance(drawing, openpyxl.drawing.image.Image):
+                continue  # Skip images, focus on charts
+              # Access the XML properties of the chart
+            chart_xml = drawing._chart_part.blob
+            print(f"{chart_xml}")
+            root = ET.fromstring(chart_xml)
+            # Check if the chart references an external data source
+            external_data_source = root.find(".//c:externalData", namespaces=root.nsmap)
+            if external_data_source is not None:
+              file_chart_list.append(chart_name)
+          chart_data_list.append(file_chart_list)
+    except Exception as e:
+      print(f"Error reading {file}: {str(e)}")
+  return chart_data_list
 
 def get_formula_data(excel_files):
   formula_data_list = []
@@ -253,7 +282,7 @@ def get_formula_data(excel_files):
               for cell in row:
                 if cell.data_type == "f":
                   file_formula_list.append(cell.value)
-      formula_data_list.append(file_formula_list)
+          formula_data_list.append(file_formula_list)
     except Exception as e:
       print(f"Error reading {file}: {str(e)}")
   return formula_data_list
