@@ -36,7 +36,7 @@ def login():
     if user: 
       if bcrypt.check_password_hash(user.password, form.password.data):
         login_user(user)
-        return redirect(url_for("dashboard"))
+        return redirect(url_for("scan_list"))
   return render_template("login.html", form=form)
 
 @app.route("/dashboard", methods=["GET", "POST"])
@@ -73,6 +73,7 @@ def register():
   return render_template("register.html", form=form)
 
 @app.route("/scan_list")
+@login_required
 def scan_list(): 
   return render_template("scan_list.html")
 

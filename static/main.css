@@ -96,3 +96,60 @@ a.article-title:hover {
 .form-control:focus + .asterisk { 
   display: none;
 }
+
+.form-signin {
+  width: 100%;
+  min-width: 320px;
+  max-width: 430px;
+  padding: 15px;
+  margin: auto;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.form-control {
+  position: relative;
+  box-sizing: border-box;
+  height: auto;
+  padding: 10px;
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
+
+.btn-red {
+  background-color: #ff0000; /* Red color for the submit button */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  cursor: pointer;
+}
+
+.btn-red:hover {
+  background-color: #cc0000; /* Darker red on hover */
+}
+
+.asterisk {
+  color: red;
+  position: absolute;
+  margin-left: -20px;
+  font-size: 20px;
+}
+
+.form-signin form {
+  width: 100%;
+}
+
+.btn-red {
+  width: 100%; /* Full width of the parent */
+  display: block;
+}
+
+.login-link {
+  color: black; /* Make the link text black */
+  font-weight: bold;
+}
