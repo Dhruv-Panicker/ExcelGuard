@@ -10,7 +10,6 @@ import os
 import pandas as pd
 from openpyxl import load_workbook
 from openpyxl.styles.fonts import Font
-import xml.etree.ElementTree as ET
 
 app = Flask(__name__)
 Bootstrap(app)
@@ -97,6 +96,10 @@ def begin_scan():
         file.save(template_file_path)
       except Exception as e:
         return f"Error processing the file: {str(e)}"
+  author_data_list = {}
+  column_data_list = {}
+  font_data_list = {}
+  formula_data_list = {}
   for file in assignment_files:
     if file:
       try:
@@ -105,12 +108,14 @@ def begin_scan():
         os.makedirs(assignment_files_folder, exist_ok=True)
         assignment_file_path = os.path.join(assignment_files_folder, file.filename)
         file.save(assignment_file_path)
-        print(f"Run")
-        author_data_list = get_chart_data(assignment_files)
+        
+        author_data_list[file.filename] = get_author_data(file)
+        column_data_list[file.filename] = get_column_data(file)
+        font_data_list[file.filename] = get_font_names(file)
+        formula_data_list[file.filename] = get_formula_data(file)
       except Exception as e:
         return f"Error processing the file: {str(e)}"
-    print(f"{author_data_list}")
-  return "Done"
+  return render_template("scanning.html", author_data=author_data_list, column_data=column_data_list, font_data=font_data_list, formula_data=formula_data_list)
 
 @app.route("/scanning")
 def scanning():
@@ -156,134 +161,146 @@ class LoginForm(FlaskForm):
 if __name__ == "__main__":
   app.run(host="127.0.0.1", port=8080, debug=True)
 
-def column_data(excel_files):
-  column_data_list = []
+def get_column_data(excel_file):
+  file_widths = set()
   # Go through each file in the given list of excel files
-  for file in excel_files:
-    try:
-      # If the file has no filename, something went wrong
-      if file.filename == "":
-        print(f"Could not retrieve filename from {file}")
-      # Otherwise save the file, open the workbook, go through each sheet and store the unique column widths (in each respective sheet)
-      else:
-        if file:
-          file_widths = set()
-          assignment_files_folder = "scan_assignment_uploads"
-          assignment_file_path = os.path.join(assignment_files_folder, file.filename)
-          excel_workbook = load_workbook(assignment_file_path)
-          for sheet_name in excel_workbook.sheetnames:
-            excel_sheet = excel_workbook[sheet_name]
-            for column in excel_sheet.columns:
-              width = excel_sheet.column_dimensions[column[0].column_letter].width
-              file_widths.add(width)
-      column_data_list.append(file_widths)
-    except Exception as e:
-      print(f"Error reading {file}: {str(e)}")
-  return column_data_list
+  try:
+    # If the file has no filename, something went wrong
+    if excel_file.filename == "":
+      print(f"Could not retrieve filename from {excel_file}")
+    # Otherwise save the file, open the workbook, go through each sheet and store the unique column widths (in each respective sheet)
+    else:
+      if excel_file:
+        assignment_files_folder = "scan_assignment_uploads"
+        assignment_file_path = os.path.join(assignment_files_folder, excel_file.filename)
+        excel_workbook = load_workbook(assignment_file_path)
+        for sheet_name in excel_workbook.sheetnames:
+          excel_sheet = excel_workbook[sheet_name]
+          for column in excel_sheet.columns:
+            width = excel_sheet.column_dimensions[column[0].column_letter].width
+            file_widths.add(width)
+  except Exception as e:
+    print(f"Error reading {excel_file}: {str(e)}")
+  return file_widths
 
-def get_author_data(excel_files):
-  author_data_list = []
-  # Go through each file in the given list of excel files
-  for file in excel_files:
-    try:
-      # If the file has no filename, something went wrong
-      if file.filename == "":
-        print(f"Could not retrieve filename from {file}")
-      else:
-        # Otherwise save the file, open the workbook, and store the workbook properties (contains file metadata like creator, title, description, createdDate, lastModifiedDate, lastModifiedBy, etc)
-        if file: 
-          assignment_files_folder = "scan_assignment_uploads"
-          assignment_file_path = os.path.join(assignment_files_folder, file.filename)
-          excel_workbook = load_workbook(assignment_file_path)
-          author_data_list.append(excel_workbook.properties).tolist()
-    except Exception as e:
-      print(f"Error reading {file}: {str(e)}")
-  return author_data_list
+def get_author_data(excel_file):
+  file_author_list = {}
+  try:
+    # If the file has no filename, something went wrong
+    if excel_file.filename == "":
+      print(f"Could not retrieve filename from {excel_file}")
+    else:
+      # Otherwise save the file, open the workbook, and store the workbook properties (contains file metadata like creator, title, description, createdDate, lastModifiedDate, lastModifiedBy, etc)
+      if excel_file: 
+        assignment_files_folder = "scan_assignment_uploads"
+        assignment_file_path = os.path.join(assignment_files_folder, excel_file.filename)
+        excel_workbook = load_workbook(assignment_file_path)
+        file_author_list["creator"] = excel_workbook.properties.creator
+        file_author_list["created"] = excel_workbook.properties.created
+        file_author_list["modified"] = excel_workbook.properties.modified
+        file_author_list["lastModifiedBy"] = excel_workbook.properties.lastModifiedBy
+  except Exception as e:
+    print(f"Error reading {excel_file}: {str(e)}")
+  return file_author_list
 
+#TODO
 def get_shape_data(excel_files):
-  shape_data_list = []
+  # shape_data_list = []
+  #   # Go through each file in the given list of excel files
+  # for file in excel_files:
+  #   try:
+  #     # If the file has no filename, something went wrong
+  #     if file.filename == "":
+  #       print(f"Could not retrieve filename from {file}")
+  #     else:
+  #       # Otherwise save the file, open the workbook, and get the formula from every cell which contains a formula
+  #       if file:
+  #         file_shape_list = []
+  #         assignment_files_folder = "scan_assignment_uploads"
+  #         assignment_file_path = os.path.join(assignment_files_folder, file.filename)
+  #         excel_workbook = load_workbook(assignment_file_path)
+  #         for sheet in excel_workbook:
+  #           for shape_id, shape in sheet.shapes.items():
+  #             shape_type = shape.type
+  #             left = shape.left
+  #             top = shape.top
+  #             width = shape.width
+  #             height = shape.height
+  #             file_shape_list.append({
+  #               "Shape ID": shape_id,
+  #               "Type": shape_type,
+  #               "Left": left,
+  #               "Top": top,
+  #               "Width": width,
+  #               "Height": height,
+  #           })
+  #   except Exception as e:
+  #     print(f"Error reading {file}: {str(e)}")
   return shape_data_list
 
-def get_font_names(excel_files):
+def get_font_names(excel_file):
   font_names_list = []
-  # Go through each file in the given list of excel files
-  for file in excel_files:
-    try:
-      # If the file has no filename, something went wrong
-      if file.filename == "":
-        print(f"Could not retrieve filename from {file}")
-      else:
-        # Otherwise save the file, open the workbook, and get every unique font from each file and store them into a list (which contains all the unique fonts used by each excel file)
-        if file:
-          file_font_names = set()
-          assignment_files_folder = "scan_assignment_uploads"
-          assignment_file_path = os.path.join(assignment_files_folder, file.filename)
-          excel_workbook = load_workbook(assignment_file_path)
-          for sheet_name in excel_workbook.sheetnames:
-            excel_sheet = excel_workbook[sheet_name]
-            for row in excel_sheet.iter_rows(min_row=1, max_col=excel_sheet.max_column, max_row=excel_sheet.max_row):
-              for cell in row:
-                font = cell.font
-                if font.name not in file_font_names: 
-                  file_font_names.add(font.name)
-          font_names_list.append(file_font_names)
-    except Exception as e:
-      print(f"Error reading {file}: {str(e)}")
+  try:
+    # If the file has no filename, something went wrong
+    if excel_file.filename == "":
+      print(f"Could not retrieve filename from {excel_file}")
+    else:
+      # Otherwise save the file, open the workbook, and get every unique font from each file and store them into a list (which contains all the unique fonts used by each excel file)
+      if excel_file:
+        assignment_files_folder = "scan_assignment_uploads"
+        assignment_file_path = os.path.join(assignment_files_folder, excel_file.filename)
+        excel_workbook = load_workbook(assignment_file_path)
+        for sheet_name in excel_workbook.sheetnames:
+          excel_sheet = excel_workbook[sheet_name]
+          for row in excel_sheet.iter_rows(min_row=1, max_col=excel_sheet.max_column, max_row=excel_sheet.max_row):
+            for cell in row:
+              font = cell.font
+              if font.name not in font_names_list: 
+                font_names_list.append(font.name)
+  except Exception as e:
+    print(f"Error reading {excel_file}: {str(e)}")
   return font_names_list
 
+#TODO
 def get_chart_data(excel_files):
-  chart_data_list = []
-    # Go through each file in the given list of excel files
-  for file in excel_files:
-    try:
-      # If the file has no filename, something went wrong
-      if file.filename == "":
-        print(f"Could not retrieve filename from {file}")
-      else:
-        # Otherwise save the file, open the workbook, and get the formula from every cell which contains a formula
-        if file:
-          file_chart_list = []
-          assignment_files_folder = "scan_assignment_uploads"
-          assignment_file_path = os.path.join(assignment_files_folder, file.filename)
-          excel_workbook = load_workbook(assignment_file_path)
-          for drawing in excel_workbook.drawings:
-            if isinstance(drawing, openpyxl.drawing.image.Image):
-                continue  # Skip images, focus on charts
-              # Access the XML properties of the chart
-            chart_xml = drawing._chart_part.blob
-            print(f"{chart_xml}")
-            root = ET.fromstring(chart_xml)
-            # Check if the chart references an external data source
-            external_data_source = root.find(".//c:externalData", namespaces=root.nsmap)
-            if external_data_source is not None:
-              file_chart_list.append(chart_name)
-          chart_data_list.append(file_chart_list)
-    except Exception as e:
-      print(f"Error reading {file}: {str(e)}")
+  # chart_data_list = []
+  #   # Go through each file in the given list of excel files
+  # for file in excel_files:
+  #   try:
+  #     # If the file has no filename, something went wrong
+  #     if file.filename == "":
+  #       print(f"Could not retrieve filename from {file}")
+  #     else:
+  #       # Otherwise save the file, open the workbook, and get the formula from every cell which contains a formula
+  #       if file:
+  #         file_chart_list = []
+  #         assignment_files_folder = "scan_assignment_uploads"
+  #         assignment_file_path = os.path.join(assignment_files_folder, file.filename)
+  #         excel_workbook = load_workbook(assignment_file_path)
+  #         for sheet in excel_workbook:
+  #           for chart in sheet._charts:
+  #   except Exception as e:
+  #     print(f"Error reading {file}: {str(e)}")
   return chart_data_list
 
-def get_formula_data(excel_files):
-  formula_data_list = []
-  # Go through each file in the given list of excel files
-  for file in excel_files:
-    try:
-      # If the file has no filename, something went wrong
-      if file.filename == "":
-        print(f"Could not retrieve filename from {file}")
-      else:
-        # Otherwise save the file, open the workbook, and get the formula from every cell which contains a formula
-        if file:
-          file_formula_list = []
-          assignment_files_folder = "scan_assignment_uploads"
-          assignment_file_path = os.path.join(assignment_files_folder, file.filename)
-          excel_workbook = load_workbook(assignment_file_path)
-          for sheet_name in excel_workbook.sheetnames:
-            excel_sheet = excel_workbook[sheet_name]
-            for row in excel_sheet.iter_rows(min_row=1, max_col=excel_sheet.max_column, max_row=excel_sheet.max_row):
-              for cell in row:
-                if cell.data_type == "f":
-                  file_formula_list.append(cell.value)
-          formula_data_list.append(file_formula_list)
-    except Exception as e:
-      print(f"Error reading {file}: {str(e)}")
-  return formula_data_list
+def get_formula_data(excel_file):
+  file_formula_list = []
+  try:
+    # If the file has no filename, something went wrong
+    if excel_file.filename == "":
+      print(f"Could not retrieve filename from {excel_file}")
+    else:
+      # Otherwise save the file, open the workbook, and get the formula from every cell which contains a formula
+      if excel_file:
+        assignment_files_folder = "scan_assignment_uploads"
+        assignment_file_path = os.path.join(assignment_files_folder, excel_file.filename)
+        excel_workbook = load_workbook(assignment_file_path)
+        for sheet_name in excel_workbook.sheetnames:
+          excel_sheet = excel_workbook[sheet_name]
+          for row in excel_sheet.iter_rows(min_row=1, max_col=excel_sheet.max_column, max_row=excel_sheet.max_row):
+            for cell in row:
+              if cell.data_type == "f":
+                file_formula_list.append(cell.value)
+  except Exception as e:
+    print(f"Error reading {file_formula_list}: {str(e)}")
+  return file_formula_list

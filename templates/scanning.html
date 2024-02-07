@@ -2,18 +2,59 @@
 <!DOCTYPE html>
 <html>
   {% block html_head %}
-      <!-- Required meta tags -->
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  
-      <!-- Bootstrap CSS -->
-      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-  
-      <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css') }}">
-      <title>Excel Plagiarism Tool</title>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css') }}">
+    <title>Excel Plagiarism Tool</title>
   {% endblock %}
   {% block content %}
   <div class="container">
+    <h3 class="text-light">Author Data</h3>
+    <ul class="text-light">
+      {% for key in author_data.keys() %}
+        <ul><strong>Filename - </strong>{{key}}
+          <li><strong>Creator: </strong>{{author_data[key]["creator"]}}</li>
+          <li><strong>Created: </strong>{{author_data[key]["created"]}}</li>
+          <li><strong>Modified: </strong>{{author_data[key]["modified"]}}</li>
+          <li><strong>Last Modified By: </strong>{{author_data[key]["lastModifiedBy"]}}</li>
+        </ul>
+      {% endfor %}
+    </ul>
+    <h3 class="text-light">Column Data</h3>
+      <ul class="text-light">
+        {% for key in column_data.keys() %}
+        <ul><strong>Filename - </strong>{{key}}
+          {% for column_width in column_data[key] %}
+          <li>{{column_width}}</li>
+          {% endfor %}
+        </ul>
+      </ul>
+    {% endfor %}
+    <h3 class="text-light">Font Data</h3>
+      <ul class="text-light">
+        {% for key in font_data.keys() %}
+        <ul><strong>Filename - </strong>{{key}}
+          {% for font in font_data[key] %}
+          <li>{{font}}</li>
+          {% endfor %}
+        </ul>
+      {% endfor %}
+      </ul>
+    <h3 class="text-light">Formula Data</h3>
+      <ul class="text-light">
+        {% for key in formula_data.keys() %}
+        <ul><strong>Filename - </strong>{{key}}
+          {% for formula in formula_data[key] %}
+          <li>{{formula}}</li>
+          {% endfor %}
+        </ul>
+      {% endfor %}
+      </ul>
   </div>
   {% endblock %}
 </html>
