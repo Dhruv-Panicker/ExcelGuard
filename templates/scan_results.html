@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+<!DOCTYPE html>
+<html>
+  {% block html_head %}
+      <!-- Required meta tags -->
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  
+      <!-- Bootstrap CSS -->
+      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+      <!-- Awesome Fonts Icons-->
+      <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css" integrity="sha384-lZN37f5QGtY3VHgisS14W3ExzMWZxybE1SJSEsQp9S+oqd12jhcu+A56Ebc1zFSJ" crossorigin="anonymous">
+  
+      <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css') }}">
+  {% endblock %}
+  {% block content %}
+  <div class="container">
+    <button class="btn bg-green text-light" href="path_to_selected_files" download="proposed_file_names"><strong><strong><span class="fas fa-download"></span> Download Selected Files</strong></button>
+    <br><br>
+    <div class="form-inline">
+      <table id="data" class="table table-bordered bg-white">
+        <thead>
+          <tr class="bg-green text-light">
+            <th>
+              <div class="checkbox">
+                <label>
+                  <input type="checkbox" name="fileCheckboxes" id="fileAll" value="0">
+                </label>
+              </div>
+            </th>
+            <th>Filename</th>
+            <th>Student</th>
+            <th>Submitted Date</th>
+            <th>Size</th>
+            <th>%</th>
+            <th><span class="fas fa-flag text-danger"></span></th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- instead of manually creating each the table rows below, we will instead iterate through each of the "previous scans" from the DB and display thier information -->
+          <tr>
+            <td>
+            <div class="checkbox">
+              <label>
+                <input type="checkbox" name="fileCheckboxes" id="file1" value="1">
+              </label>
+            </div>
+            </td>
+            <td>jfenton_cs4470_assig...</td>
+            <td>Jason Fenton Ri...</td>
+            <td>10/25/2023 11:06AM</td>
+            <td>252 KB</td> 
+            <td>84</td>
+            <td><span class="fas fa-flag text-danger"></td>   
+            <td class="pr-0">
+              <button type="submit" class="btn bg-yellow" name="view_scan"><strong>View</strong></button>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <div class="checkbox">
+                <label>
+                  <input type="checkbox" name="fileCheckboxes" id="file2" value="2">
+                </label>
+              </div>
+            </td>
+            <td>cling_cs4470_assigme..</td>
+            <td>Cho Hu Ling</td>
+            <td>10/25/2023 11:42PM</td>
+            <td>252 KB</td> 
+            <td>42</td>
+            <td><span class="fas fa-flag text-secondary"></td>   
+            <td class="pr-0">
+              <button type="submit" class="btn bg-yellow" name="view_scan"><strong>View</strong></button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="form-inline">
+      <button class="col-2 btn bg-green text-light" href="path_to_all_files" download="proposed_file_names"><strong><span class="fas fa-download"></span> Download All</strong></button>
+      <div class="col-2">
+        <label for="addFiles" class="btn btn-dark text-light"><strong>Add Files...</strong></label>
+        <!-- add d-none to class when jQuery implemented-->
+        <input type="file" id="addFiles" class="d-none">
+      </div>
+      <button class="col-1 btn bg-yellow text-dark mr-3"><strong>Share  <span class="fas fa-arrow-right"></span></strong></button>
+      <button class="col-1 btn bg-white text-dark"><strong>Save</strong></button>
+  </div>
+  </div>
+  {% endblock %}
+</html>

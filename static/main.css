@@ -1,0 +1,155 @@
+body {
+  background: #06411d;
+  margin-top: 5rem;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: #444444;
+}
+
+.bg-green {
+  background-color: #2f8248;
+}
+
+.bg-yellow {
+  background-color: #e7ea38;
+}
+.site-header .navbar-nav .nav-link {
+  color: #cbd5db;
+}
+
+.site-header .navbar-nav .nav-link:hover {
+  color: #ffffff;
+}
+
+.site-header .navbar-nav .nav-link.active {
+  font-weight: 500;
+}
+
+.content-section {
+  background: #ffffff;
+  padding: 10px 20px;
+  border: 1px solid #dddddd;
+  border-radius: 3px;
+  margin-bottom: 20px;
+}
+
+.article-title {
+  color: #444444;
+}
+
+a.article-title:hover {
+  color: #428bca;
+  text-decoration: none;
+}
+
+.article-content {
+  white-space: pre-line;
+}
+
+.article-img {
+  height: 65px;
+  width: 65px;
+  margin-right: 16px;
+}
+
+.article-metadata {
+  padding-bottom: 1px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid #e3e3e3
+}
+
+.article-metadata a:hover {
+  color: #333;
+  text-decoration: none;
+}
+
+.article-svg {
+  width: 25px;
+  height: 25px;
+  vertical-align: middle;
+}
+
+.account-img {
+  height: 125px;
+  width: 125px;
+  margin-right: 20px;
+  margin-bottom: 16px;
+}
+
+.account-heading {
+  font-size: 2.5rem;
+}
+
+.asterisk{
+  color: white;
+  position: relative;
+  left: -30px;
+}
+
+.asterisk:after{
+  content: '*';
+  color: red;
+  font-size: x-large;
+}
+
+.form-control:focus + .asterisk { 
+  display: none;
+}
+
+.form-signin {
+  width: 100%;
+  min-width: 320px;
+  max-width: 430px;
+  padding: 15px;
+  margin: auto;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.form-control {
+  position: relative;
+  box-sizing: border-box;
+  height: auto;
+  padding: 10px;
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
+
+.btn-red {
+  background-color: #ff0000; /* Red color for the submit button */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  cursor: pointer;
+}
+
+.btn-red:hover {
+  background-color: #cc0000; /* Darker red on hover */
+}
+
+.asterisk {
+  color: red;
+  position: absolute;
+  margin-left: -20px;
+  font-size: 20px;
+}
+
+.form-signin form {
+  width: 100%;
+}
+
+.btn-red {
+  width: 100%; /* Full width of the parent */
+  display: block;
+}
+
+.login-link {
+  color: black; /* Make the link text black */
+  font-weight: bold;
+}
