@@ -6,4 +6,5 @@ Flask-Login
 Flask-SQLAlchemy
 Flask-WTF
 openpyxl
-pandas
+python-dotenv
+psycopg2-binary

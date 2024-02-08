@@ -7,13 +7,18 @@ from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import InputRequired, Length, ValidationError
 from flask_bcrypt import Bcrypt
 import os
-import pandas as pd
 from openpyxl import load_workbook
-from openpyxl.styles.fonts import Font
+import psycopg2
+from datetime import datetime
 
 app = Flask(__name__)
 Bootstrap(app)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///database.db"
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_BINDS'] = {
+    'postgresql': 'postgresql://tzvupyse:uiTK_Ha5MwII2BTsuCVyIA749Ut8e4Y0@baasu.db.elephantsql.com/tzvupyse',
+}
+connection = psycopg2.connect('postgresql://tzvupyse:uiTK_Ha5MwII2BTsuCVyIA749Ut8e4Y0@baasu.db.elephantsql.com/tzvupyse')
 app.config["SECRET_KEY"] = "thisisasecretkey"
 
 db = SQLAlchemy(app)
@@ -23,9 +28,9 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
 
-@app.route("/")
-def index(): 
-  return render_template("home.html")
+# Create the databases and tables
+with app.app_context():
+    db.create_all()
 
 @app.route("/login", methods=["GET", "POST"])
 def login(): 
@@ -38,17 +43,11 @@ def login():
         return redirect(url_for("scan_list"))
   return render_template("login.html", form=form)
 
-@app.route("/dashboard", methods=["GET", "POST"])
-@login_required
-def dashboard(): 
-  return render_template("dashboard.html")
-
 @app.route("/logout", methods=["GET", "POST"])
 @login_required
 def logout():
   logout_user()
   return redirect(url_for("login"))
-
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -77,6 +76,7 @@ def scan_list():
   return render_template("scan_list.html")
 
 @app.route("/begin_scan", methods=["POST"])
+@login_required
 def begin_scan():
   template_file = None
   # If TemplateFile is uploaded assign it to our templateFile variable to it
@@ -100,6 +100,9 @@ def begin_scan():
   column_data_list = {}
   font_data_list = {}
   formula_data_list = {}
+  new_scan = Scan(course_name=request.form.get('courseCode'), date_created=datetime.now(), number_of_files=len(assignment_files), user_created_by="Pirana")
+  db.session.add(new_scan)
+  db.session.commit()
   for file in assignment_files:
     if file:
       try:
@@ -118,18 +121,22 @@ def begin_scan():
   return render_template("scanning.html", author_data=author_data_list, column_data=column_data_list, font_data=font_data_list, formula_data=formula_data_list)
 
 @app.route("/scanning")
+@login_required
 def scanning():
   return render_template("scanning.html")
 
 @app.route("/scan_results")
+@login_required
 def scan_results():
   return render_template("scan_results.html")
 
 @app.route("/view_scan")
+@login_required
 def view_scan():
   return render_template("view_scan.html")
 
 @app.route("/settings")
+@login_required
 def settings():
   return render_template("settings.html")
 
@@ -157,9 +164,27 @@ class LoginForm(FlaskForm):
   username = StringField(validators=[InputRequired(), Length(min=4, max=20)], render_kw={"placeholder": "Username"})
   password = PasswordField(validators=[InputRequired(), Length(min=8, max=20)], render_kw={"placeholder": "Password"})
   submit = SubmitField("Login")
+  
+# PostgreSQL database models 
+class PostgreSQLUser(db.Model):
+  __bind_key__ = 'postgresql'
+  __tablename__ = 'postgresql_users'
+  id = db.Column(db.Integer, primary_key=True)
+  username = db.Column(db.String(80), unique=True, nullable=False)
+class Scan(db.Model):
+    __bind_key__ = 'postgresql'
+    id = db.Column(db.Integer, primary_key=True)
+    course_name = db.Column(db.String(255))
+    date_created = db.Column(db.TIMESTAMP, default=datetime.utcnow)
+    number_of_files = db.Column(db.Integer)
+    number_of_flagged_files = db.Column(db.Integer)
+    user_created_by = db.Column(db.String(255))
+    __tablename__ = "scans"
 
 if __name__ == "__main__":
-  app.run(host="127.0.0.1", port=8080, debug=True)
+  app.run(host="127.0.0.1", # The above code is not doing anything. It is just a single line with the
+  # word "port" written in it.
+  Pport=8080, debug=True)
 
 def get_column_data(excel_file):
   file_widths = set()
