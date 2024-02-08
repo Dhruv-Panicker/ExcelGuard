@@ -182,9 +182,7 @@ class Scan(db.Model):
     __tablename__ = "scans"
 
 if __name__ == "__main__":
-  app.run(host="127.0.0.1", # The above code is not doing anything. It is just a single line with the
-  # word "port" written in it.
-  Pport=8080, debug=True)
+  app.run(host="127.0.0.1", Pport=8080, debug=True)
 
 def get_column_data(excel_file):
   file_widths = set()
