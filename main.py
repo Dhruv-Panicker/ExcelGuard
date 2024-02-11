@@ -1,6 +1,12 @@
 from flask import Flask, request, render_template, url_for, redirect
 from flask_bootstrap import Bootstrap
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import ARRAY
+from sqlalchemy import ForeignKey
+from sqlalchemy import Integer
+from sqlalchemy.orm import Mapped
+from sqlalchemy.orm import mapped_column
+from sqlalchemy.orm import relationship
 from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user 
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
@@ -10,6 +16,7 @@ import os
 from openpyxl import load_workbook
 import psycopg2
 from datetime import datetime
+from typing import List
 
 app = Flask(__name__)
 Bootstrap(app)
@@ -179,7 +186,60 @@ class Scan(db.Model):
     number_of_files = db.Column(db.Integer)
     number_of_flagged_files = db.Column(db.Integer)
     user_created_by = db.Column(db.String(255))
+    children: Mapped[List["ExcelFile"]] = relationship()
+    children: Mapped[List["TemplateFile"]] = relationship()
     __tablename__ = "scans"
+
+class ExcelFile(db.Model):
+  __bind_key__ = 'postgresql'
+  id = db.Column(db.Integer, primary_key=True)
+  scan_id: Mapped[int] = mapped_column(ForeignKey("scans.id"))
+  file_name = db.Column(db.String(255))
+  created = db.Column(db.TIMESTAMP)
+  creator = db.Column(db.String(255))
+  modified = db.Column(db.TIMESTAMP)
+  last_modified_by = db.Column(db.String(255))
+  submitted_date =db.Column(db.TIMESTAMP)
+  plagiarism_percentage = db.Column(db.Integer)
+  unique_column_width_list = db.Column(ARRAY(db.Integer))
+  unique_font_names_list = db.Column(ARRAY(db.String(255)))
+  complex_formulas_list =db.Column(ARRAY(db.String(255)))
+  children: Mapped[List["ExcelShape"]] = relationship()
+  children: Mapped[List["ExcelChart"]] = relationship()
+  __tablename__ = "excel_files"
+  
+class TemplateFile(db.Model):
+  __bind_key__ = 'postgresql'
+  id = db.Column(db.Integer, primary_key=True)
+  scan_id: Mapped[int] = mapped_column(ForeignKey("scans.id"))
+  file_name = db.Column(db.String(255))
+  creator = db.Column(db.String(255))
+  unique_column_width_list = db.Column(ARRAY(db.Integer))
+  unique_font_names_list = db.Column(ARRAY(db.String(255)))
+  __tablename__ = "template_files"
+  
+class ExcelShape(db.Model):
+  __bind_key__ = 'postgresql'
+  id = db.Column(db.Integer, primary_key=True)
+  excel_file_id: Mapped[int] = mapped_column(ForeignKey("excel_files.id"))
+  shape_type = db.Column(db.String(255))
+  shape_left = db.Column(db.Integer)
+  shape_top = db.Column(db.Integer)
+  shape_width = db.Column(db.Integer)
+  shape_height = db.Column(db.Integer)
+  __tablename__ = "excel_shapes"
+  
+class ExcelChart(db.Model):
+  __bind_key__ = 'postgresql'
+  id = db.Column(db.Integer, primary_key=True)
+  excel_file_id: Mapped[int] = mapped_column(ForeignKey("excel_files.id"))
+  data_source = db.Column(db.String(255))
+  chart_type = db.Column(db.String(255))
+  chart_left = db.Column(db.Integer)
+  chart_top = db.Column(db.Integer)
+  chart_width = db.Column(db.Integer)
+  chart_height = db.Column(db.Integer)
+  __tablename__ = "excel_charts"
 
 if __name__ == "__main__":
   app.run(host="127.0.0.1", Pport=8080, debug=True)
