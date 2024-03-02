@@ -9,6 +9,6 @@
 7. Run “set FLASK_APP=main”
 8. Run “set FLASK_ENVIRONMENT=development”
 9. Run “set FLASK_DEBUG=1”
-10.Run "code ." (this will open up the repository in the coding IDE you chose)
+10. Run "code ." (this will open up the repository in the coding IDE you chose)
 11. Run "flask run"
 12. Visit the URL specified in your terminal after running the command above

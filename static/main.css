@@ -81,12 +81,6 @@ a.article-title:hover {
   font-size: 2.5rem;
 }
 
-.asterisk{
-  color: white;
-  position: relative;
-  left: -30px;
-}
-
 .asterisk:after{
   content: '*';
   color: red;
@@ -135,7 +129,7 @@ a.article-title:hover {
 
 .asterisk {
   color: red;
-  position: absolute;
+  position: relative;
   margin-left: -20px;
   font-size: 20px;
 }
