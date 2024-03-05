@@ -60,13 +60,14 @@
           </thead>
           <tbody>
             <!-- instead of manually creating each the table rows below, we will instead iterate through each of the "previous scans" from the DB and display thier information -->
+          {% for scan in previous_scans %}
             <tr>
-              <td>Assignment 3</td>
-              <td>CS4470Y</td>
-              <td>11/12/2023 12:34PM</td>
-              <td>38</td> 
-              <td>3</td>
-              <td>kyle_maclean</td>   
+              <td>{{scan[1]}}</td>
+              <td>{{scan[2]}}</td>
+              <td>{{scan[3]}}</td>
+              <td>{{scan[4]}}</td> 
+              <td>{{scan[5]}}</td>
+              <td>{{scan[6]}}</td>   
               <td class="pr-0">
                 <button type="submit" class="btn bg-yellow" name="view_scan"><strong>View</strong></button>
               </td>
@@ -74,34 +75,7 @@
                 <button class="btn btn-danger"><strong>Delete</strong></button>
               </td>
             </tr>
-            <tr>
-              <td>Assignment 2</td>
-              <td>CS4470Y</td>
-              <td>10/28/2023 9:23PM</td>
-              <td>37</td> 
-              <td>4</td>
-              <td>kyle_maclean</td>   
-              <td class="pr-0">
-                <button type="submit" class="btn bg-yellow" name="view_scan"><strong>View</strong></button>
-              </td>
-              <td class="pr-0">
-                <button class="btn btn-danger"><strong>Delete</strong></button>
-              </td>
-            </tr>
-            <tr>
-              <td>asn2</td>
-              <td>CS4450A</td>
-              <td>10/27/2023 11:01AM</td>
-              <td>102</td> 
-              <td>14</td>
-              <td>Nazim</td>   
-              <td class="pr-0">
-                <button type="submit" class="btn bg-yellow" name="view_scan"><strong>View</strong></button>
-              </td>
-              <td class="pr-0">
-                <button class="btn btn-danger"><strong>Delete</strong></button>
-              </td>
-            </tr>
+          {% endfor %}
           </tbody>
         </table>
       </div>
