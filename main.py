@@ -26,6 +26,7 @@ app.config['SQLALCHEMY_BINDS'] = {
     'postgresql': 'postgresql://tzvupyse:uiTK_Ha5MwII2BTsuCVyIA749Ut8e4Y0@baasu.db.elephantsql.com/tzvupyse',
 }
 connection = psycopg2.connect('postgresql://tzvupyse:uiTK_Ha5MwII2BTsuCVyIA749Ut8e4Y0@baasu.db.elephantsql.com/tzvupyse')
+cursor = connection.cursor()
 app.config["SECRET_KEY"] = "thisisasecretkey"
 
 db = SQLAlchemy(app)
@@ -34,122 +35,6 @@ bcrypt = Bcrypt(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
-
-# Create the databases and tables
-with app.app_context():
-    db.create_all()
-
-@app.route("/login", methods=["GET", "POST"])
-def login(): 
-  form = LoginForm()
-  if form.validate_on_submit():
-    user = User.query.filter_by(username=form.username.data).first()
-    if user: 
-      if bcrypt.check_password_hash(user.password, form.password.data):
-        login_user(user)
-        return redirect(url_for("scan_list"))
-  return render_template("login.html", form=form)
-
-@app.route("/logout", methods=["GET", "POST"])
-@login_required
-def logout():
-  logout_user()
-  return redirect(url_for("login"))
-
-@app.route("/register", methods=["GET", "POST"])
-def register():
-  form = RegistrationForm()
-
-  if form.validate_on_submit():
-    hashed_password = bcrypt.generate_password_hash(form.password.data)
-    new_user = User(username=form.username.data, password=hashed_password)
-
-    db.session.add(new_user)
-    try:
-      db.session.commit()
-      print("User added successfully")  # Debugging message
-    except Exception as e:
-      print("Failed to add user:", e) 
-      return redirect(url_for("login"))
-  else:
-    print("Form not validated")  # Debugging message
-    print(form.errors)         
-  print("Database file path:", os.path.join(os.getcwd(), "database.db"))
-  return render_template("register.html", form=form)
-
-@app.route("/scan_list")
-@login_required
-def scan_list(): 
-  return render_template("scan_list.html")
-
-@app.route("/begin_scan", methods=["POST"])
-@login_required
-def begin_scan():
-  template_file = None
-  # If TemplateFile is uploaded assign it to our templateFile variable to it
-  if "templateFile" in request.files:
-    if request.files["templateFile"].filename != "":
-      template_file = request.files["templateFile"]
-  # Assign uploaded assignment files to assignmentFiles variable
-  assignment_files = request.files.getlist("assignmentFiles")
-  # Saving the uploaded files so that they can be accessed
-  if template_file is not None:
-    if template_file:
-      try:
-        # Set the directory and file path where the template file will be saved and save it
-        template_files_folder = "scan_template_uploads"
-        os.makedirs(template_files_folder, exist_ok=True)
-        template_file_path = os.path.join(template_files_folder, file.filename)
-        file.save(template_file_path)
-      except Exception as e:
-        return f"Error processing the file: {str(e)}"
-  author_data_list = {}
-  column_data_list = {}
-  font_data_list = {}
-  formula_data_list = {}
-  new_scan = Scan(course_name=request.form.get('courseCode'), date_created=datetime.now(), number_of_files=len(assignment_files), user_created_by="Pirana")
-  db.session.add(new_scan)
-  db.session.commit()
-  for file in assignment_files:
-    if file:
-      try:
-        # Set the directory and file path where the assignment file will be saved and save it
-        assignment_files_folder = "scan_assignment_uploads"
-        os.makedirs(assignment_files_folder, exist_ok=True)
-        assignment_file_path = os.path.join(assignment_files_folder, file.filename)
-        file.save(assignment_file_path)
-        
-        author_data_list[file.filename] = get_author_data(file)
-        column_data_list[file.filename] = get_column_data(file)
-        font_data_list[file.filename] = get_font_names(file)
-        formula_data_list[file.filename] = get_formula_data(file)
-      except Exception as e:
-        return f"Error processing the file: {str(e)}"
-  return render_template("scanning.html", author_data=author_data_list, column_data=column_data_list, font_data=font_data_list, formula_data=formula_data_list)
-
-@app.route("/scanning")
-@login_required
-def scanning():
-  return render_template("scanning.html")
-
-@app.route("/scan_results")
-@login_required
-def scan_results():
-  return render_template("scan_results.html")
-
-@app.route("/view_scan")
-@login_required
-def view_scan():
-  return render_template("view_scan.html")
-
-@app.route("/settings")
-@login_required
-def settings():
-  return render_template("settings.html")
-
-@login_manager.user_loader
-def load_user(user_id):
-  return User.query.get(int(user_id))
 
 class User(db.Model, UserMixin): 
   id = db.Column(db.Integer, primary_key=True)
@@ -178,17 +63,19 @@ class PostgreSQLUser(db.Model):
   __tablename__ = 'postgresql_users'
   id = db.Column(db.Integer, primary_key=True)
   username = db.Column(db.String(80), unique=True, nullable=False)
+
 class Scan(db.Model):
-    __bind_key__ = 'postgresql'
-    id = db.Column(db.Integer, primary_key=True)
-    course_name = db.Column(db.String(255))
-    date_created = db.Column(db.TIMESTAMP, default=datetime.utcnow)
-    number_of_files = db.Column(db.Integer)
-    number_of_flagged_files = db.Column(db.Integer)
-    user_created_by = db.Column(db.String(255))
-    children: Mapped[List["ExcelFile"]] = relationship()
-    children: Mapped[List["TemplateFile"]] = relationship()
-    __tablename__ = "scans"
+  __bind_key__ = 'postgresql'
+  id = db.Column(db.Integer, primary_key=True)
+  assignment_name = db.Column(db.String(255))
+  course_name = db.Column(db.String(255))
+  date_created = db.Column(db.TIMESTAMP, default=datetime.utcnow)
+  number_of_files = db.Column(db.Integer)
+  number_of_flagged_files = db.Column(db.Integer)
+  user_created_by = db.Column(db.String(255))
+  children: Mapped[List["ExcelFile"]] = relationship()
+  children: Mapped[List["TemplateFile"]] = relationship()
+  __tablename__ = "scans"
 
 class ExcelFile(db.Model):
   __bind_key__ = 'postgresql'
@@ -240,6 +127,127 @@ class ExcelChart(db.Model):
   chart_width = db.Column(db.Integer)
   chart_height = db.Column(db.Integer)
   __tablename__ = "excel_charts"
+
+
+# Create the databases and tables
+with app.app_context():
+  db.create_all()
+  # cursor.execute("CREATE TABLE scans(id SERIAL PRIMARY KEY, assignment_name VARCHAR(255) NOT NULL, course_name VARCHAR(255) NOT NULL, date_created TIMESTAMP NOT NULL, number_of_files INTEGER, number_of_flagged_files INTEGER, user_created_by VARCHAR(255) NOT NULL)")
+
+@app.route("/login", methods=["GET", "POST"])
+def login(): 
+  form = LoginForm()
+  if form.validate_on_submit():
+    user = User.query.filter_by(username=form.username.data).first()
+    if user: 
+      if bcrypt.check_password_hash(user.password, form.password.data):
+        login_user(user)
+        return redirect(url_for("scan_list"))
+  return render_template("login.html", form=form)
+
+@app.route("/logout", methods=["GET", "POST"])
+@login_required
+def logout():
+  logout_user()
+  return redirect(url_for("login"))
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+  form = RegistrationForm()
+
+  if form.validate_on_submit():
+    hashed_password = bcrypt.generate_password_hash(form.password.data)
+    new_user = User(username=form.username.data, password=hashed_password)
+
+    db.session.add(new_user)
+    try:
+      db.session.commit()
+      print("User added successfully")  # Debugging message
+    except Exception as e:
+      print("Failed to add user:", e) 
+      return redirect(url_for("login"))
+  else:
+    print("Form not validated")  # Debugging message
+    print(form.errors)         
+  print("Database file path:", os.path.join(os.getcwd(), "database.db"))
+  return render_template("register.html", form=form)
+
+@app.route("/scan_list")
+@login_required
+def scan_list(): 
+  PREVIOUS_SCANS_LIST_LIMIT = 5
+  cursor.execute("SELECT * FROM scans")
+  previous_scans_list = cursor.fetchmany(PREVIOUS_SCANS_LIST_LIMIT)
+  return render_template("scan_list.html", previous_scans=previous_scans_list)
+
+@app.route("/begin_scan", methods=["POST"])
+@login_required
+def begin_scan():
+  template_file = None
+  # If TemplateFile is uploaded assign it to our templateFile variable to it
+  if "templateFile" in request.files:
+    if request.files["templateFile"].filename != "":
+      template_file = request.files["templateFile"]
+  # Assign uploaded assignment files to assignmentFiles variable
+  assignment_files = request.files.getlist("assignmentFiles")
+  # Saving the uploaded files so that they can be accessed
+  if template_file is not None:
+    if template_file:
+      try:
+        # Set the directory and file path where the template file will be saved and save it
+        template_files_folder = "scan_template_uploads"
+        os.makedirs(template_files_folder, exist_ok=True)
+        template_file_path = os.path.join(template_files_folder, file.filename)
+        file.save(template_file_path)
+      except Exception as e:
+        return f"Error processing the file: {str(e)}"
+  author_data_list = {}
+  column_data_list = {}
+  font_data_list = {}
+  formula_data_list = {}
+  new_scan = Scan(assignment_name=request.form.get('assignmentName'), course_name=request.form.get('courseCode'), date_created=datetime.now(), number_of_files=len(assignment_files), user_created_by="Pirana")
+  db.session.add(new_scan)
+  db.session.commit()
+  for file in assignment_files:
+    if file:
+      try:
+        # Set the directory and file path where the assignment file will be saved and save it
+        assignment_files_folder = "scan_assignment_uploads"
+        os.makedirs(assignment_files_folder, exist_ok=True)
+        assignment_file_path = os.path.join(assignment_files_folder, file.filename)
+        file.save(assignment_file_path)
+        
+        author_data_list[file.filename] = get_author_data(file)
+        column_data_list[file.filename] = get_column_data(file)
+        font_data_list[file.filename] = get_font_names(file)
+        formula_data_list[file.filename] = get_formula_data(file)
+      except Exception as e:
+        return f"Error processing the file: {str(e)}"
+  return render_template("scanning.html", author_data=author_data_list, column_data=column_data_list, font_data=font_data_list, formula_data=formula_data_list)
+
+@app.route("/scanning")
+@login_required
+def scanning():
+  return render_template("scanning.html")
+
+@app.route("/scan_results")
+@login_required
+def scan_results():
+  return render_template("scan_results.html")
+
+@app.route("/view_scan")
+@login_required
+def view_scan():
+  return render_template("view_scan.html")
+
+@app.route("/settings")
+@login_required
+def settings():
+  return render_template("settings.html")
+
+@login_manager.user_loader
+def load_user(user_id):
+  return User.query.get(int(user_id))
 
 if __name__ == "__main__":
   app.run(host="127.0.0.1", Pport=8080, debug=True)
