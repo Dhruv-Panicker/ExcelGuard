@@ -132,7 +132,6 @@ class ExcelChart(db.Model):
 # Create the databases and tables
 with app.app_context():
   db.create_all()
-  # cursor.execute("CREATE TABLE scans(id SERIAL PRIMARY KEY, assignment_name VARCHAR(255) NOT NULL, course_name VARCHAR(255) NOT NULL, date_created TIMESTAMP NOT NULL, number_of_files INTEGER, number_of_flagged_files INTEGER, user_created_by VARCHAR(255) NOT NULL)")
 
 @app.route("/login", methods=["GET", "POST"])
 def login(): 
