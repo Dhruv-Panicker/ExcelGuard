@@ -28,32 +28,43 @@
     <h3 class="text-light">Column Data</h3>
       <ul class="text-light">
         {% for key in column_data.keys() %}
-        <ul><strong>Filename - </strong>{{key}}
-          {% for column_width in column_data[key] %}
-          <li>{{column_width}}</li>
-          {% endfor %}
+          <ul><strong>Filename - </strong>{{key}}
+            {% for column_width in column_data[key] %}
+              <li>{{column_width}}</li>
+            {% endfor %}
         </ul>
         {% endfor %}
       </ul>
     <h3 class="text-light">Font Data</h3>
       <ul class="text-light">
         {% for key in font_data.keys() %}
-        <ul><strong>Filename - </strong>{{key}}
-          {% for font in font_data[key] %}
-          <li>{{font}}</li>
-          {% endfor %}
-        </ul>
-      {% endfor %}
+          <ul><strong>Filename - </strong>{{key}}
+            {% for font in font_data[key] %}
+              <li>{{font}}</li>
+            {% endfor %}
+          </ul>
+        {% endfor %}
       </ul>
     <h3 class="text-light">Formula Data</h3>
       <ul class="text-light">
         {% for key in formula_data.keys() %}
         <ul><strong>Filename - </strong>{{key}}
           {% for formula in formula_data[key] %}
-          <li>{{formula}}</li>
+            <li>{{formula}}</li>
           {% endfor %}
         </ul>
-      {% endfor %}
+        {% endfor %}
+      </ul>
+
+    <h3 class="text-light">Chart Data</h3>
+      <ul class="text-light">
+        {% for key in chart_data.keys() %}
+        <ul><strong>Filename - </strong>{{key}}
+          {% for chart_formula in chart_data[key] %}
+            <li>{{chart_formula}}</li>
+          {% endfor %}
+        </ul>
+        {% endfor %}
       </ul>
   </div>
   {% endblock %}

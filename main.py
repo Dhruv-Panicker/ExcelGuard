@@ -17,6 +17,8 @@ from openpyxl import load_workbook
 import psycopg2
 from datetime import datetime
 from typing import List
+import pythoncom
+import win32com.client as client
 
 app = Flask(__name__)
 Bootstrap(app)
@@ -130,12 +132,14 @@ def login():
       if bcrypt.check_password_hash(user.password, form.password.data):
         login_user(user)
         return redirect(url_for("scan_list"))
+
   return render_template("login.html", form=form)
 
 @app.route("/logout", methods=["GET", "POST"])
 @login_required
 def logout():
   logout_user()
+
   return redirect(url_for("login"))
 
 @app.route("/register", methods=["GET", "POST"])
@@ -157,6 +161,7 @@ def register():
     print("Form not validated")  # Debugging message
     print(form.errors)         
   print("Database file path:", os.path.join(os.getcwd(), "database.db"))
+
   return render_template("register.html", form=form)
 
 @app.route("/scan_list")
@@ -165,6 +170,7 @@ def scan_list():
   PREVIOUS_SCANS_LIST_LIMIT = 5
   cursor.execute("SELECT * FROM scans ORDER BY date_created DESC")
   previous_scans_list = cursor.fetchmany(PREVIOUS_SCANS_LIST_LIMIT)
+
   return render_template("scan_list.html", previous_scans=previous_scans_list)
 
 @app.route("/begin_scan", methods=["POST"])
@@ -185,15 +191,16 @@ def begin_scan():
         # Set the directory and file path where the template file will be saved and save it
         template_files_folder = "scan_template_uploads"
         os.makedirs(template_files_folder, exist_ok=True)
-        template_file_path = os.path.join(template_files_folder, file.filename)
+        template_file_path = os.path.join(template_files_folder, template_file.filename)
         file.save(template_file_path)
       except Exception as e:
         return f"Error processing the file: {str(e)}"
   
-  author_data_list = {}
-  column_data_list = {}
-  font_data_list = {}
-  formula_data_list = {}
+  author_data_data = {}
+  column_data_data = {}
+  font_data_data = {}
+  formula_data_data = {}
+  chart_data_data = {}
 
   new_scan = Scan(assignment_name=request.form.get('assignmentName'), course_name=request.form.get('courseCode'), date_created=datetime.now(), number_of_files=len(assignment_files), user_created_by="Pirana")
   db.session.add(new_scan)
@@ -208,16 +215,19 @@ def begin_scan():
         assignment_file_path = os.path.join(assignment_files_folder, file.filename)
         file.save(assignment_file_path)
         
-        # author_data_list[file.filename] = get_author_data(file)
-        # column_data_list[file.filename] = get_column_data(file)
-        font_data_list[file.filename] = get_font_names(file)
-        # formula_data_list[file.filename] = get_formula_data(file)
+        # author_data_data[file.filename] = get_author_data(file)
+        # column_data_data[file.filename] = get_column_data(file)
+        font_data_data[file.filename] = get_font_names(file)
+        # formula_data_data[file.filename] = get_formula_data(file)
+        chart_data_data[file.filename] = get_chart_data(file)
       except Exception as e:
         return f"Error processing the file: {str(e)}"
-  session["author_data"] = author_data_list
-  session["column_data"] = column_data_list
-  session["font_data"] = font_data_list
-  session["formula_data"] = formula_data_list
+  session["author_data"] = author_data_data
+  session["column_data"] = column_data_data
+  session["font_data"] = font_data_data
+  session["formula_data"] = formula_data_data
+  session["chart_data"] = chart_data_data
+
   return redirect(url_for(".scanning"))
 
 @app.route("/scanning")
@@ -227,7 +237,9 @@ def scanning():
   column_data = session["column_data"]
   font_data = session["font_data"]
   formula_data = session["formula_data"]
-  return render_template("scanning.html", author_data=author_data, column_data=column_data, font_data=font_data, formula_data=formula_data)
+  chart_data = session["chart_data"]
+
+  return render_template("scanning.html", author_data=author_data, column_data=column_data, font_data=font_data, formula_data=formula_data, chart_data=chart_data)
 
 @app.route("/scan_results")
 @login_required
@@ -252,7 +264,7 @@ if __name__ == "__main__":
   app.run(host="127.0.0.1", Pport=8080, debug=True)
 
 def get_column_data(excel_file):
-  file_widths = set()
+  file_column_data = set()
   # Go through each file in the given list of excel files
   try:
     # If the file has no filename, something went wrong
@@ -268,13 +280,14 @@ def get_column_data(excel_file):
           excel_sheet = excel_workbook[sheet_name]
           for column in excel_sheet.columns:
             width = excel_sheet.column_dimensions[column[0].column_letter].width
-            file_widths.add(width)
+            file_column_data.add(width)
   except Exception as e:
     print(f"Error reading {excel_file}: {str(e)}")
-  return file_widths
+
+  return file_column_data
 
 def get_author_data(excel_file):
-  file_author_list = {}
+  file_author_data = {}
   try:
     # If the file has no filename, something went wrong
     if excel_file.filename == "":
@@ -285,16 +298,17 @@ def get_author_data(excel_file):
         assignment_files_folder = "scan_assignment_uploads"
         assignment_file_path = os.path.join(assignment_files_folder, excel_file.filename)
         excel_workbook = load_workbook(assignment_file_path)
-        file_author_list["creator"] = excel_workbook.properties.creator
-        file_author_list["created"] = excel_workbook.properties.created
-        file_author_list["modified"] = excel_workbook.properties.modified
-        file_author_list["lastModifiedBy"] = excel_workbook.properties.lastModifiedBy
+        file_author_data["creator"] = excel_workbook.properties.creator
+        file_author_data["created"] = excel_workbook.properties.created
+        file_author_data["modified"] = excel_workbook.properties.modified
+        file_author_data["lastModifiedBy"] = excel_workbook.properties.lastModifiedBy
   except Exception as e:
     print(f"Error reading {excel_file}: {str(e)}")
-  return file_author_list
+
+  return file_author_data
 
 def get_font_names(excel_file):
-  font_names_list = []
+  font_names_data = []
   try:
     # If the file has no filename, something went wrong
     if excel_file.filename == "":
@@ -310,35 +324,66 @@ def get_font_names(excel_file):
           for row in excel_sheet.iter_rows(min_row=1, max_col=excel_sheet.max_column, max_row=excel_sheet.max_row):
             for cell in row:
               font = cell.font
-              if font.name not in font_names_list: 
-                font_names_list.append(font.name)
+              if font.name not in font_names_data: 
+                font_names_data.append(font.name)
   except Exception as e:
     print(f"Error reading {excel_file}: {str(e)}")
-  return font_names_list
+
+  return font_names_data
 
 def get_chart_data(excel_file):
-  chart_data_list = []
+  file_chart_data = []
   # Go through each file in the given list of excel files
   try:
     # If the file has no filename, something went wrong
     if excel_file.filename == "":
       print(f"Could not retrieve filename from {excel_file}")
     else:
-      # Otherwise save the file, open the workbook, and get the formula from every cell which contains a formula
-      if excel_file:
-        file_chart_list = []
-        assignment_files_folder = "scan_assignment_uploads"
-        assignment_file_path = os.path.join(assignment_files_folder, excel_file.filename)
-        excel_workbook = load_workbook(assignment_file_path)
-        for sheet in excel_workbook:
-          for chart in sheet._charts:
-            print("here")
+      pythoncom.CoInitialize()
+      assignment_file_path = get_absolute_path(excel_file.filename)
+      excel_app = client.Dispatch('Excel.Application')
+      excel_workbook = excel_app.Workbooks.Open(assignment_file_path)
+      for sheet in excel_workbook.Sheets:
+        print(f'Processed sheet {sheet.Name}')
+        # Code to indicate that sheet is a CHART SHEET (contains only charts)
+        if sheet.Type == -4100:
+          series_output(sheet)
+        # otherwise it's a regular worksheet (which may contain charts)
+        elif sheet.Type == -4167:
+          for chart in sheet.ChartObjects():
+            file_chart_data.append(series_output(chart.Chart))
+      # Don't save and close workbook (otherwise charts will automatically be removed)
+      excel_workbook.Close()
+      excel_app.Quit()
   except Exception as e:
     print(f"Error reading {excel_file}: {str(e)}")
-  return chart_data_list
+
+  return file_chart_data
+
+def series_output(chart):
+  chart_data = {
+      "Chart Name": chart.Name,
+      "Series": []
+    }
+  for series in chart.SeriesCollection():
+    print(series.Formula)
+    chart_data["Series"].append({
+        "Name": series.Name,
+        "Formula": series.Formula
+      })
+
+  return chart_data
+    
+def get_absolute_path(filename):
+  # Get the current directory of the script
+  current_dir = os.path.dirname(os.path.abspath(__file__))
+  # Construct the absolute path using the current directory and the filename
+  absolute_path = os.path.join(current_dir, "scan_assignment_uploads", filename)
+
+  return absolute_path
 
 def get_formula_data(excel_file):
-  file_formula_list = []
+  file_formula_data = []
   try:
     # If the file has no filename, something went wrong
     if excel_file.filename == "":
@@ -354,7 +399,8 @@ def get_formula_data(excel_file):
           for row in excel_sheet.iter_rows(min_row=1, max_col=excel_sheet.max_column, max_row=excel_sheet.max_row):
             for cell in row:
               if cell.data_type == "f":
-                file_formula_list.append(cell.value)
+                file_formula_data.append(cell.value)
   except Exception as e:
-    print(f"Error reading {file_formula_list}: {str(e)}")
-  return file_formula_list
+    print(f"Error reading {file_formula_data}: {str(e)}")
+
+  return file_formula_data
