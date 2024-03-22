@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, url_for, redirect
+from flask import Flask, request, render_template, url_for, redirect, session
 from flask_bootstrap import Bootstrap
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import ARRAY
@@ -91,7 +91,6 @@ class ExcelFile(db.Model):
   unique_column_width_list = db.Column(ARRAY(db.Integer))
   unique_font_names_list = db.Column(ARRAY(db.String(255)))
   complex_formulas_list =db.Column(ARRAY(db.String(255)))
-  children: Mapped[List["ExcelShape"]] = relationship()
   children: Mapped[List["ExcelChart"]] = relationship()
   __tablename__ = "excel_files"
   
@@ -104,17 +103,6 @@ class TemplateFile(db.Model):
   unique_column_width_list = db.Column(ARRAY(db.Integer))
   unique_font_names_list = db.Column(ARRAY(db.String(255)))
   __tablename__ = "template_files"
-  
-class ExcelShape(db.Model):
-  __bind_key__ = 'postgresql'
-  id = db.Column(db.Integer, primary_key=True)
-  excel_file_id: Mapped[int] = mapped_column(ForeignKey("excel_files.id"))
-  shape_type = db.Column(db.String(255))
-  shape_left = db.Column(db.Integer)
-  shape_top = db.Column(db.Integer)
-  shape_width = db.Column(db.Integer)
-  shape_height = db.Column(db.Integer)
-  __tablename__ = "excel_shapes"
   
 class ExcelChart(db.Model):
   __bind_key__ = 'postgresql'
@@ -175,7 +163,7 @@ def register():
 @login_required
 def scan_list(): 
   PREVIOUS_SCANS_LIST_LIMIT = 5
-  cursor.execute("SELECT * FROM scans")
+  cursor.execute("SELECT * FROM scans ORDER BY date_created DESC")
   previous_scans_list = cursor.fetchmany(PREVIOUS_SCANS_LIST_LIMIT)
   return render_template("scan_list.html", previous_scans=previous_scans_list)
 
@@ -189,6 +177,7 @@ def begin_scan():
       template_file = request.files["templateFile"]
   # Assign uploaded assignment files to assignmentFiles variable
   assignment_files = request.files.getlist("assignmentFiles")
+
   # Saving the uploaded files so that they can be accessed
   if template_file is not None:
     if template_file:
@@ -200,13 +189,16 @@ def begin_scan():
         file.save(template_file_path)
       except Exception as e:
         return f"Error processing the file: {str(e)}"
+  
   author_data_list = {}
   column_data_list = {}
   font_data_list = {}
   formula_data_list = {}
+
   new_scan = Scan(assignment_name=request.form.get('assignmentName'), course_name=request.form.get('courseCode'), date_created=datetime.now(), number_of_files=len(assignment_files), user_created_by="Pirana")
   db.session.add(new_scan)
   db.session.commit()
+
   for file in assignment_files:
     if file:
       try:
@@ -216,18 +208,26 @@ def begin_scan():
         assignment_file_path = os.path.join(assignment_files_folder, file.filename)
         file.save(assignment_file_path)
         
-        author_data_list[file.filename] = get_author_data(file)
-        column_data_list[file.filename] = get_column_data(file)
+        # author_data_list[file.filename] = get_author_data(file)
+        # column_data_list[file.filename] = get_column_data(file)
         font_data_list[file.filename] = get_font_names(file)
-        formula_data_list[file.filename] = get_formula_data(file)
+        # formula_data_list[file.filename] = get_formula_data(file)
       except Exception as e:
         return f"Error processing the file: {str(e)}"
-  return render_template("scanning.html", author_data=author_data_list, column_data=column_data_list, font_data=font_data_list, formula_data=formula_data_list)
+  session["author_data"] = author_data_list
+  session["column_data"] = column_data_list
+  session["font_data"] = font_data_list
+  session["formula_data"] = formula_data_list
+  return redirect(url_for(".scanning"))
 
 @app.route("/scanning")
 @login_required
 def scanning():
-  return render_template("scanning.html")
+  author_data = session["author_data"]
+  column_data = session["column_data"]
+  font_data = session["font_data"]
+  formula_data = session["formula_data"]
+  return render_template("scanning.html", author_data=author_data, column_data=column_data, font_data=font_data, formula_data=formula_data)
 
 @app.route("/scan_results")
 @login_required
@@ -293,41 +293,6 @@ def get_author_data(excel_file):
     print(f"Error reading {excel_file}: {str(e)}")
   return file_author_list
 
-#TODO
-def get_shape_data(excel_files):
-  # shape_data_list = []
-  #   # Go through each file in the given list of excel files
-  # for file in excel_files:
-  #   try:
-  #     # If the file has no filename, something went wrong
-  #     if file.filename == "":
-  #       print(f"Could not retrieve filename from {file}")
-  #     else:
-  #       # Otherwise save the file, open the workbook, and get the formula from every cell which contains a formula
-  #       if file:
-  #         file_shape_list = []
-  #         assignment_files_folder = "scan_assignment_uploads"
-  #         assignment_file_path = os.path.join(assignment_files_folder, file.filename)
-  #         excel_workbook = load_workbook(assignment_file_path)
-  #         for sheet in excel_workbook:
-  #           for shape_id, shape in sheet.shapes.items():
-  #             shape_type = shape.type
-  #             left = shape.left
-  #             top = shape.top
-  #             width = shape.width
-  #             height = shape.height
-  #             file_shape_list.append({
-  #               "Shape ID": shape_id,
-  #               "Type": shape_type,
-  #               "Left": left,
-  #               "Top": top,
-  #               "Width": width,
-  #               "Height": height,
-  #           })
-  #   except Exception as e:
-  #     print(f"Error reading {file}: {str(e)}")
-  return shape_data_list
-
 def get_font_names(excel_file):
   font_names_list = []
   try:
@@ -351,26 +316,25 @@ def get_font_names(excel_file):
     print(f"Error reading {excel_file}: {str(e)}")
   return font_names_list
 
-#TODO
-def get_chart_data(excel_files):
-  # chart_data_list = []
-  #   # Go through each file in the given list of excel files
-  # for file in excel_files:
-  #   try:
-  #     # If the file has no filename, something went wrong
-  #     if file.filename == "":
-  #       print(f"Could not retrieve filename from {file}")
-  #     else:
-  #       # Otherwise save the file, open the workbook, and get the formula from every cell which contains a formula
-  #       if file:
-  #         file_chart_list = []
-  #         assignment_files_folder = "scan_assignment_uploads"
-  #         assignment_file_path = os.path.join(assignment_files_folder, file.filename)
-  #         excel_workbook = load_workbook(assignment_file_path)
-  #         for sheet in excel_workbook:
-  #           for chart in sheet._charts:
-  #   except Exception as e:
-  #     print(f"Error reading {file}: {str(e)}")
+def get_chart_data(excel_file):
+  chart_data_list = []
+  # Go through each file in the given list of excel files
+  try:
+    # If the file has no filename, something went wrong
+    if excel_file.filename == "":
+      print(f"Could not retrieve filename from {excel_file}")
+    else:
+      # Otherwise save the file, open the workbook, and get the formula from every cell which contains a formula
+      if excel_file:
+        file_chart_list = []
+        assignment_files_folder = "scan_assignment_uploads"
+        assignment_file_path = os.path.join(assignment_files_folder, excel_file.filename)
+        excel_workbook = load_workbook(assignment_file_path)
+        for sheet in excel_workbook:
+          for chart in sheet._charts:
+            print("here")
+  except Exception as e:
+    print(f"Error reading {excel_file}: {str(e)}")
   return chart_data_list
 
 def get_formula_data(excel_file):
