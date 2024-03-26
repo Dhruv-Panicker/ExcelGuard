@@ -176,32 +176,18 @@ def scan_list():
 @app.route("/begin_scan", methods=["POST"])
 @login_required
 def begin_scan():
-  template_file = None
-  # If TemplateFile is uploaded assign it to our templateFile variable to it
-  if "templateFile" in request.files:
-    if request.files["templateFile"].filename != "":
-      template_file = request.files["templateFile"]
   # Assign uploaded assignment files to assignmentFiles variable
   assignment_files = request.files.getlist("assignmentFiles")
-
-  # Saving the uploaded files so that they can be accessed
-  if template_file is not None:
-    if template_file:
-      try:
-        # Set the directory and file path where the template file will be saved and save it
-        template_files_folder = "scan_template_uploads"
-        os.makedirs(template_files_folder, exist_ok=True)
-        template_file_path = os.path.join(template_files_folder, template_file.filename)
-        file.save(template_file_path)
-      except Exception as e:
-        return f"Error processing the file: {str(e)}"
+  template_file_path = get_template_file_path(request)
   
-  author_data_data = {}
-  column_data_data = {}
-  font_data_data = {}
-  formula_data_data = {}
-  chart_data_data = {}
-
+  # Initialize sets to store data from all uploaded files
+  author_data = {}
+  column_data = {}
+  font_data = {}
+  formula_data = {}
+  chart_data = {}
+  
+  # Create a record for the newly created scan and commit that record into the PostgreSQL database
   new_scan = Scan(assignment_name=request.form.get('assignmentName'), course_name=request.form.get('courseCode'), date_created=datetime.now(), number_of_files=len(assignment_files), user_created_by="Pirana")
   db.session.add(new_scan)
   db.session.commit()
@@ -215,21 +201,49 @@ def begin_scan():
         assignment_file_path = os.path.join(assignment_files_folder, file.filename)
         file.save(assignment_file_path)
         
-        # author_data_data[file.filename] = get_author_data(file)
-        # column_data_data[file.filename] = get_column_data(file)
-        font_data_data[file.filename] = get_font_names(file)
-        # formula_data_data[file.filename] = get_formula_data(file)
-        chart_data_data[file.filename] = get_chart_data(file)
+        author_data[file.filename] = get_author_data(file)
+        # column_data[file.filename] = get_column_data(file)
+        font_data[file.filename] = get_font_names(file)
+        # formula_data[file.filename] = get_formula_data(file)
+        chart_data[file.filename] = get_chart_data(file)
+
+        new_file = ExcelFile(scan_id=new_scan.id, file_name=file.filename, created=author_data[file.filename]["created"], creator=author_data[file.filename]["creator"], modified=author_data[file.filename]["modified"], last_modified_by=author_data[file.filename]["lastModifiedBy"], submitted_date=datetime.now())
+        db.session.add(new_file)
+        db.session.commit()
+
       except Exception as e:
         return f"Error processing the file: {str(e)}"
-  session["author_data"] = author_data_data
-  session["column_data"] = column_data_data
-  session["font_data"] = font_data_data
-  session["formula_data"] = formula_data_data
-  session["chart_data"] = chart_data_data
+  
+  # Pass the data from the files into the session, this is so that the data can be accessed and displayed in the scannung.html page
+  # TODO: instead we would commit this data into the PostgreSQL database (created "file" records, add this data to each file as attributes), then we'd access the data by calling the database in def scanning (we'd need to pass in the Scan ID to the session)
+  session["author_data"] = author_data
+  session["column_data"] = column_data
+  session["font_data"] = font_data
+  session["formula_data"] = formula_data
+  session["chart_data"] = chart_data
 
   return redirect(url_for(".scanning"))
 
+def get_template_file_path(request):
+  template_file = None
+  template_file_path = None
+  # If TemplateFile is uploaded assign it to our templateFile variable to it
+  if "templateFile" in request.files:
+    if request.files["templateFile"].filename != "":
+      template_file = request.files["templateFile"]
+
+  # Saving the uploaded files so that they can be accessed
+  if template_file is not None:
+    try:
+      # Set the directory and file path where the template file will be saved and save it
+      template_files_folder = "scan_template_uploads"
+      os.makedirs(template_files_folder, exist_ok=True)
+      template_file_path = os.path.join(template_files_folder, template_file.filename)
+      template_file.save(template_file_path)
+    except Exception as e:
+      return f"Error processing the file: {str(e)}"
+  return template_file_path
+  
 @app.route("/scanning")
 @login_required
 def scanning():
@@ -366,7 +380,6 @@ def series_output(chart):
       "Series": []
     }
   for series in chart.SeriesCollection():
-    print(series.Formula)
     chart_data["Series"].append({
         "Name": series.Name,
         "Formula": series.Formula
