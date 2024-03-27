@@ -28,8 +28,6 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_BINDS'] = {
     'postgresql': 'postgresql://tzvupyse:uiTK_Ha5MwII2BTsuCVyIA749Ut8e4Y0@baasu.db.elephantsql.com/tzvupyse',
 }
-connection = psycopg2.connect('postgresql://tzvupyse:uiTK_Ha5MwII2BTsuCVyIA749Ut8e4Y0@baasu.db.elephantsql.com/tzvupyse')
-cursor = connection.cursor()
 app.config["SECRET_KEY"] = "thisisasecretkey"
 
 db = SQLAlchemy(app)
@@ -169,8 +167,7 @@ def register():
 @login_required
 def scan_list(): 
   PREVIOUS_SCANS_LIST_LIMIT = 5
-  cursor.execute("SELECT * FROM scans ORDER BY date_created DESC")
-  previous_scans_list = cursor.fetchmany(PREVIOUS_SCANS_LIST_LIMIT)
+  previous_scans_list = Scan.query.order_by(Scan.date_created.desc()).limit(PREVIOUS_SCANS_LIST_LIMIT).all()
 
   return render_template("scan_list.html", previous_scans=previous_scans_list)
 
