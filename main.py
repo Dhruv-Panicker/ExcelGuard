@@ -18,6 +18,7 @@ import psycopg2
 from datetime import datetime
 from typing import List
 import pythoncom
+# Since this is needed to extract data on charts, the application MUST be running on Windows
 import win32com.client as client
 
 app = Flask(__name__)
@@ -90,7 +91,7 @@ class ExcelFile(db.Model):
   last_modified_by = db.Column(db.String(255))
   submitted_date =db.Column(db.TIMESTAMP)
   plagiarism_percentage = db.Column(db.Integer)
-  unique_column_width_list = db.Column(ARRAY(db.Integer))
+  unique_column_width_list = db.Column(ARRAY(db.Float))
   unique_font_names_list = db.Column(ARRAY(db.String(255)))
   complex_formulas_list =db.Column(ARRAY(db.String(255)))
   children: Mapped[List["ExcelChart"]] = relationship()
@@ -102,7 +103,7 @@ class TemplateFile(db.Model):
   scan_id: Mapped[int] = mapped_column(ForeignKey("scans.id"))
   file_name = db.Column(db.String(255))
   creator = db.Column(db.String(255))
-  unique_column_width_list = db.Column(ARRAY(db.Integer))
+  unique_column_width_list = db.Column(ARRAY(db.Float))
   unique_font_names_list = db.Column(ARRAY(db.String(255)))
   __tablename__ = "template_files"
   
@@ -112,10 +113,10 @@ class ExcelChart(db.Model):
   excel_file_id: Mapped[int] = mapped_column(ForeignKey("excel_files.id"))
   data_source = db.Column(db.String(255))
   chart_type = db.Column(db.String(255))
-  chart_left = db.Column(db.Integer)
-  chart_top = db.Column(db.Integer)
-  chart_width = db.Column(db.Integer)
-  chart_height = db.Column(db.Integer)
+  chart_left = db.Column(db.Float)
+  chart_top = db.Column(db.Float)
+  chart_width = db.Column(db.Float)
+  chart_height = db.Column(db.Float)
   __tablename__ = "excel_charts"
 
 
@@ -213,7 +214,10 @@ def begin_scan():
                           creator=author_data[file.filename]["creator"],
                           modified=author_data[file.filename]["modified"],
                           last_modified_by=author_data[file.filename]["lastModifiedBy"],
-                          submitted_date=datetime.now())
+                          submitted_date=datetime.now(),
+                          unique_column_width_list=column_data[file.filename],
+                          unique_font_names_list=font_data[file.filename])
+                          #,complex_formulas_list=formula_data[file.filename])
         db.session.add(new_file)
         db.session.commit()
 
@@ -222,6 +226,7 @@ def begin_scan():
   
   # Pass the data from the files into the session, this is so that the data can be accessed and displayed in the scannung.html page
   # TODO: instead we would commit this data into the PostgreSQL database (created "file" records, add this data to each file as attributes), then we'd access the data by calling the database in def scanning (we'd need to pass in the Scan ID to the session)
+  session["scan_id"] = new_scan.id
   session["author_data"] = author_data
   session["column_data"] = column_data
   session["font_data"] = font_data
@@ -253,6 +258,7 @@ def get_template_file_path(request):
 @app.route("/scanning")
 @login_required
 def scanning():
+  scan_id = session["scan_id"]
   author_data = session["author_data"]
   column_data = session["column_data"]
   font_data = session["font_data"]
