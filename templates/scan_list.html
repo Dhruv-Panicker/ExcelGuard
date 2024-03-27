@@ -59,15 +59,14 @@
             </tr>
           </thead>
           <tbody>
-            <!-- instead of manually creating each the table rows below, we will instead iterate through each of the "previous scans" from the DB and display thier information -->
           {% for scan in previous_scans %}
             <tr>
-              <td>{{scan[1]}}</td>
-              <td>{{scan[2]}}</td>
-              <td>{{scan[3]}}</td>
-              <td>{{scan[4]}}</td> 
-              <td>{{scan[5]}}</td>
-              <td>{{scan[6]}}</td>   
+              <td>{{ scan.assignment_name }}</td>
+              <td>{{ scan.course_name }}</td>
+              <td>{{ scan.date_created }}</td>
+              <td>{{ scan.number_of_files }}</td> 
+              <td>{{ scan.user_created_by }}</td>
+              <td>{{ scan.additional_attribute }}</td> <!-- Add additional attributes if necessary -->
               <td class="pr-0">
                 <button type="submit" class="btn bg-yellow" name="view_scan"><strong>View</strong></button>
               </td>

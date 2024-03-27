@@ -14,10 +14,10 @@ from wtforms.validators import InputRequired, Length, ValidationError
 from flask_bcrypt import Bcrypt
 import os
 from openpyxl import load_workbook
-import psycopg2
 from datetime import datetime
 from typing import List
 import pythoncom
+# Since this is needed to extract data on charts, the application MUST be running on Windows
 import win32com.client as client
 
 app = Flask(__name__)
@@ -27,8 +27,6 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_BINDS'] = {
     'postgresql': 'postgresql://tzvupyse:uiTK_Ha5MwII2BTsuCVyIA749Ut8e4Y0@baasu.db.elephantsql.com/tzvupyse',
 }
-connection = psycopg2.connect('postgresql://tzvupyse:uiTK_Ha5MwII2BTsuCVyIA749Ut8e4Y0@baasu.db.elephantsql.com/tzvupyse')
-cursor = connection.cursor()
 app.config["SECRET_KEY"] = "thisisasecretkey"
 
 db = SQLAlchemy(app)
@@ -90,7 +88,7 @@ class ExcelFile(db.Model):
   last_modified_by = db.Column(db.String(255))
   submitted_date =db.Column(db.TIMESTAMP)
   plagiarism_percentage = db.Column(db.Integer)
-  unique_column_width_list = db.Column(ARRAY(db.Integer))
+  unique_column_width_list = db.Column(ARRAY(db.Float))
   unique_font_names_list = db.Column(ARRAY(db.String(255)))
   complex_formulas_list =db.Column(ARRAY(db.String(255)))
   children: Mapped[List["ExcelChart"]] = relationship()
@@ -102,7 +100,7 @@ class TemplateFile(db.Model):
   scan_id: Mapped[int] = mapped_column(ForeignKey("scans.id"))
   file_name = db.Column(db.String(255))
   creator = db.Column(db.String(255))
-  unique_column_width_list = db.Column(ARRAY(db.Integer))
+  unique_column_width_list = db.Column(ARRAY(db.Float))
   unique_font_names_list = db.Column(ARRAY(db.String(255)))
   __tablename__ = "template_files"
   
@@ -112,10 +110,10 @@ class ExcelChart(db.Model):
   excel_file_id: Mapped[int] = mapped_column(ForeignKey("excel_files.id"))
   data_source = db.Column(db.String(255))
   chart_type = db.Column(db.String(255))
-  chart_left = db.Column(db.Integer)
-  chart_top = db.Column(db.Integer)
-  chart_width = db.Column(db.Integer)
-  chart_height = db.Column(db.Integer)
+  chart_left = db.Column(db.Float)
+  chart_top = db.Column(db.Float)
+  chart_width = db.Column(db.Float)
+  chart_height = db.Column(db.Float)
   __tablename__ = "excel_charts"
 
 
@@ -168,8 +166,7 @@ def register():
 @login_required
 def scan_list(): 
   PREVIOUS_SCANS_LIST_LIMIT = 5
-  cursor.execute("SELECT * FROM scans ORDER BY date_created DESC")
-  previous_scans_list = cursor.fetchmany(PREVIOUS_SCANS_LIST_LIMIT)
+  previous_scans_list = Scan.query.order_by(Scan.date_created.desc()).limit(PREVIOUS_SCANS_LIST_LIMIT).all()
 
   return render_template("scan_list.html", previous_scans=previous_scans_list)
 
@@ -202,12 +199,21 @@ def begin_scan():
         file.save(assignment_file_path)
         
         author_data[file.filename] = get_author_data(file)
-        # column_data[file.filename] = get_column_data(file)
+        column_data[file.filename] = get_column_data(file)
         font_data[file.filename] = get_font_names(file)
         # formula_data[file.filename] = get_formula_data(file)
         chart_data[file.filename] = get_chart_data(file)
 
-        new_file = ExcelFile(scan_id=new_scan.id, file_name=file.filename, created=author_data[file.filename]["created"], creator=author_data[file.filename]["creator"], modified=author_data[file.filename]["modified"], last_modified_by=author_data[file.filename]["lastModifiedBy"], submitted_date=datetime.now())
+        new_file = ExcelFile(scan_id=new_scan.id,
+                          file_name=file.filename,
+                          created=author_data[file.filename]["created"],
+                          creator=author_data[file.filename]["creator"],
+                          modified=author_data[file.filename]["modified"],
+                          last_modified_by=author_data[file.filename]["lastModifiedBy"],
+                          submitted_date=datetime.now(),
+                          unique_column_width_list=column_data[file.filename],
+                          unique_font_names_list=font_data[file.filename])
+                          #,complex_formulas_list=formula_data[file.filename])
         db.session.add(new_file)
         db.session.commit()
 
@@ -216,6 +222,7 @@ def begin_scan():
   
   # Pass the data from the files into the session, this is so that the data can be accessed and displayed in the scannung.html page
   # TODO: instead we would commit this data into the PostgreSQL database (created "file" records, add this data to each file as attributes), then we'd access the data by calling the database in def scanning (we'd need to pass in the Scan ID to the session)
+  session["scan_id"] = new_scan.id
   session["author_data"] = author_data
   session["column_data"] = column_data
   session["font_data"] = font_data
@@ -247,6 +254,7 @@ def get_template_file_path(request):
 @app.route("/scanning")
 @login_required
 def scanning():
+  scan_id = session["scan_id"]
   author_data = session["author_data"]
   column_data = session["column_data"]
   font_data = session["font_data"]
@@ -295,10 +303,11 @@ def get_column_data(excel_file):
           for column in excel_sheet.columns:
             width = excel_sheet.column_dimensions[column[0].column_letter].width
             file_column_data.add(width)
+        excel_workbook.close()
   except Exception as e:
     print(f"Error reading {excel_file}: {str(e)}")
 
-  return file_column_data
+  return list(file_column_data)
 
 def get_author_data(excel_file):
   file_author_data = {}
@@ -316,6 +325,7 @@ def get_author_data(excel_file):
         file_author_data["created"] = excel_workbook.properties.created
         file_author_data["modified"] = excel_workbook.properties.modified
         file_author_data["lastModifiedBy"] = excel_workbook.properties.lastModifiedBy
+        excel_workbook.close()
   except Exception as e:
     print(f"Error reading {excel_file}: {str(e)}")
 
@@ -340,6 +350,7 @@ def get_font_names(excel_file):
               font = cell.font
               if font.name not in font_names_data: 
                 font_names_data.append(font.name)
+        excel_workbook.close()
   except Exception as e:
     print(f"Error reading {excel_file}: {str(e)}")
 
@@ -358,7 +369,6 @@ def get_chart_data(excel_file):
       excel_app = client.Dispatch('Excel.Application')
       excel_workbook = excel_app.Workbooks.Open(assignment_file_path)
       for sheet in excel_workbook.Sheets:
-        print(f'Processed sheet {sheet.Name}')
         # Code to indicate that sheet is a CHART SHEET (contains only charts)
         if sheet.Type == -4100:
           series_output(sheet)
@@ -377,6 +387,7 @@ def get_chart_data(excel_file):
 def series_output(chart):
   chart_data = {
       "Chart Name": chart.Name,
+      "Chart Type": chart.ChartType,
       "Series": []
     }
   for series in chart.SeriesCollection():
@@ -384,7 +395,6 @@ def series_output(chart):
         "Name": series.Name,
         "Formula": series.Formula
       })
-
   return chart_data
     
 def get_absolute_path(filename):
