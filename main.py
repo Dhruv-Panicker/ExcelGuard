@@ -202,12 +202,18 @@ def begin_scan():
         file.save(assignment_file_path)
         
         author_data[file.filename] = get_author_data(file)
-        # column_data[file.filename] = get_column_data(file)
+        column_data[file.filename] = get_column_data(file)
         font_data[file.filename] = get_font_names(file)
         # formula_data[file.filename] = get_formula_data(file)
         chart_data[file.filename] = get_chart_data(file)
 
-        new_file = ExcelFile(scan_id=new_scan.id, file_name=file.filename, created=author_data[file.filename]["created"], creator=author_data[file.filename]["creator"], modified=author_data[file.filename]["modified"], last_modified_by=author_data[file.filename]["lastModifiedBy"], submitted_date=datetime.now())
+        new_file = ExcelFile(scan_id=new_scan.id,
+                          file_name=file.filename,
+                          created=author_data[file.filename]["created"],
+                          creator=author_data[file.filename]["creator"],
+                          modified=author_data[file.filename]["modified"],
+                          last_modified_by=author_data[file.filename]["lastModifiedBy"],
+                          submitted_date=datetime.now())
         db.session.add(new_file)
         db.session.commit()
 
@@ -295,10 +301,11 @@ def get_column_data(excel_file):
           for column in excel_sheet.columns:
             width = excel_sheet.column_dimensions[column[0].column_letter].width
             file_column_data.add(width)
+        excel_workbook.close()
   except Exception as e:
     print(f"Error reading {excel_file}: {str(e)}")
 
-  return file_column_data
+  return list(file_column_data)
 
 def get_author_data(excel_file):
   file_author_data = {}
@@ -316,6 +323,7 @@ def get_author_data(excel_file):
         file_author_data["created"] = excel_workbook.properties.created
         file_author_data["modified"] = excel_workbook.properties.modified
         file_author_data["lastModifiedBy"] = excel_workbook.properties.lastModifiedBy
+        excel_workbook.close()
   except Exception as e:
     print(f"Error reading {excel_file}: {str(e)}")
 
@@ -340,6 +348,7 @@ def get_font_names(excel_file):
               font = cell.font
               if font.name not in font_names_data: 
                 font_names_data.append(font.name)
+        excel_workbook.close()
   except Exception as e:
     print(f"Error reading {excel_file}: {str(e)}")
 
@@ -358,7 +367,6 @@ def get_chart_data(excel_file):
       excel_app = client.Dispatch('Excel.Application')
       excel_workbook = excel_app.Workbooks.Open(assignment_file_path)
       for sheet in excel_workbook.Sheets:
-        print(f'Processed sheet {sheet.Name}')
         # Code to indicate that sheet is a CHART SHEET (contains only charts)
         if sheet.Type == -4100:
           series_output(sheet)
@@ -377,6 +385,7 @@ def get_chart_data(excel_file):
 def series_output(chart):
   chart_data = {
       "Chart Name": chart.Name,
+      "Chart Type": chart.ChartType,
       "Series": []
     }
   for series in chart.SeriesCollection():
@@ -384,7 +393,6 @@ def series_output(chart):
         "Name": series.Name,
         "Formula": series.Formula
       })
-
   return chart_data
     
 def get_absolute_path(filename):
