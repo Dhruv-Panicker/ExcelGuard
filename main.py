@@ -14,7 +14,6 @@ from wtforms.validators import InputRequired, Length, ValidationError
 from flask_bcrypt import Bcrypt
 import os
 from openpyxl import load_workbook
-import psycopg2
 from datetime import datetime
 from typing import List
 import pythoncom
