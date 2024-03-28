@@ -220,9 +220,8 @@ def begin_scan():
 
       except Exception as e:
         return f"Error processing the file: {str(e)}"
-    session["scan_id"] = new_scan.id
 
-  return redirect(url_for(".scan_results"))
+  return redirect(url_for(".scan_results", scan_id=new_scan.id))
 
 def get_template_file_path(request):
   template_file = None
@@ -253,7 +252,7 @@ def scanning():
 @app.route("/scan_results")
 @login_required
 def scan_results():
-  scan_id = session["scan_id"]
+  scan_id = request.args.get("scan_id")
   scan_list = ExcelFile.query.filter_by(scan_id=scan_id).all()
   return render_template("scan_results.html", scan_list=scan_list)
 
@@ -262,7 +261,8 @@ def scan_results():
 def file_details():
   file_id = request.args.get('file_id')
   file = ExcelFile.query.get(file_id)
-  return render_template("file_details.html", file=file)
+  charts = file.children
+  return render_template("file_details.html", file=file, charts=charts)
 
 @app.route("/view_scan")
 @login_required

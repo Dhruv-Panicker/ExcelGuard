@@ -68,7 +68,7 @@
               <td>{{ scan.flagged_files }}</td>
               <td>{{ scan.user_created_by }}</td>
               <td class="pr-0">
-                <button type="submit" class="btn bg-yellow" name="view_scan"><strong>View</strong></button>
+                <a href="{{ url_for('scan_results', scan_id=scan.id) }}" class="btn bg-yellow"><strong>View</strong></a>
               </td>
               <td class="pr-0">
                 <button class="btn btn-danger"><strong>Delete</strong></button>
