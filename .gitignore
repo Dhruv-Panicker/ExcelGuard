@@ -161,3 +161,17 @@ cython_debug/
 
 # Python Virtual Envirnment Configuration
 pyvenv.cfg
+
+# Python virtual environment
+venv/
+.env
+pyvenv.cfg
+
+# Database files
+database.db
+
+# Excel files and other directories specific to your project
+Example Excel Files/
+scan_assignment_uploads/
+.xlsx
+

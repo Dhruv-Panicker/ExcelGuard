@@ -31,14 +31,13 @@
             <th>Filename</th>
             <th>Student</th>
             <th>Submitted Date</th>
-            <th>Size</th>
             <th>%</th>
             <th><span class="fas fa-flag text-danger"></span></th>
             <th></th>
           </tr>
         </thead>
         <tbody>
-          <!-- instead of manually creating each the table rows below, we will instead iterate through each of the "previous scans" from the DB and display thier information -->
+          {% for file in scan_list %}
           <tr>
             <td>
             <div class="checkbox">
@@ -47,34 +46,20 @@
               </label>
             </div>
             </td>
-            <td>jfenton_cs4470_assig...</td>
-            <td>Jason Fenton Ri...</td>
-            <td>10/25/2023 11:06AM</td>
-            <td>252 KB</td> 
-            <td>84</td>
-            <td><span class="fas fa-flag text-danger"></td>   
+            <td>{{file.file_name}}</td>
+            <td>{{file.creator}}</td>
+            <td>{{file.submitted_date}}</td>
+            <td>{{file.plagiarism_percentage}}</td>
+            {% if file.plagiarism_percentage > 70 %}
+              <td><span class="fas fa-flag text-danger"></td>   
+            {% else %}
+              <td></td>
+            {% endif %}
             <td class="pr-0">
-              <button type="submit" class="btn bg-yellow" name="view_scan"><strong>View</strong></button>
+              <a href="{{ url_for('file_details', file_id=file.id) }}" class="btn bg-yellow mr-2"><strong>View</strong></a>
             </td>
           </tr>
-          <tr>
-            <td>
-              <div class="checkbox">
-                <label>
-                  <input type="checkbox" name="fileCheckboxes" id="file2" value="2">
-                </label>
-              </div>
-            </td>
-            <td>cling_cs4470_assigme..</td>
-            <td>Cho Hu Ling</td>
-            <td>10/25/2023 11:42PM</td>
-            <td>252 KB</td> 
-            <td>42</td>
-            <td><span class="fas fa-flag text-secondary"></td>   
-            <td class="pr-0">
-              <button type="submit" class="btn bg-yellow" name="view_scan"><strong>View</strong></button>
-            </td>
-          </tr>
+          {% endfor %}
         </tbody>
       </table>
     </div>

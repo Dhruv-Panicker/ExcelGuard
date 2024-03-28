@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+<!DOCTYPE html>
+<html>
+  {% block html_head %}
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css') }}">
+    <title>Excel Plagiarism Tool</title>
+  {% endblock %}
+  {% block content %}
+  <div class="container">
+    <a href="{{ url_for('scan_results', scan_id=file.scan_id) }}" class="btn btn-primary float-right">Back to Scan Results</a>
+    <h3 class="text-light">Author Data</h3>
+    <ul class="text-light">
+      <ul><strong>Filename - </strong>{{file.file_name}}
+        <li><strong>Creator: </strong>{{file.creator}}</li>
+        <li><strong>Created: </strong>{{file.created}}</li>
+        <li><strong>Modified: </strong>{{file.modified}}</li>
+        <li><strong>Last Modified By: </strong>{{file.last_modified_by}}</li>
+      </ul>
+    </ul>
+    <h3 class="text-light">Column Data</h3>
+    <ul class="text-light">
+      {% for width in file.unique_column_width_list %}
+        <li>{{ width }}</li>
+      {% endfor %}
+    </ul>
+    <h3 class="text-light">Font Data</h3>
+    <ul class="text-light">
+      {% for font in file.unique_font_names_list %}
+        <li>{{font}}</li>
+      {% endfor %}
+    </ul>
+    <h3 class="text-light">Formula Data</h3>
+    <ul class="text-light">
+      {% for formula in file.complex_formulas_list %}
+        <li>{{formula}}</li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endblock %}
+</html>
