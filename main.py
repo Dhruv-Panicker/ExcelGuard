@@ -185,7 +185,7 @@ def begin_scan():
   chart_data = {}
   
   # Create a record for the newly created scan and commit that record into the PostgreSQL database
-  new_scan = Scan(assignment_name=request.form.get('assignmentName'), course_name=request.form.get('courseCode'), date_created=datetime.now(), number_of_files=len(assignment_files), user_created_by="Pirana")
+  new_scan = Scan(assignment_name=request.form.get('assignmentName'), course_name=request.form.get('courseCode'), date_created=datetime.now(), number_of_files=len(assignment_files), user_created_by=current_user.username)
   db.session.add(new_scan)
   db.session.commit()
 
