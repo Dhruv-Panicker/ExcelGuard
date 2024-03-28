@@ -201,7 +201,7 @@ def begin_scan():
         author_data[file.filename] = get_author_data(file)
         column_data[file.filename] = get_column_data(file)
         font_data[file.filename] = get_font_names(file)
-        # formula_data[file.filename] = get_formula_data(file)
+        formula_data[file.filename] = get_formula_data(file)
         chart_data[file.filename] = get_chart_data(file)
 
         new_file = ExcelFile(scan_id=new_scan.id,
@@ -211,25 +211,17 @@ def begin_scan():
                           modified=author_data[file.filename]["modified"],
                           last_modified_by=author_data[file.filename]["lastModifiedBy"],
                           submitted_date=datetime.now(),
+                          plagiarism_percentage=0,
                           unique_column_width_list=column_data[file.filename],
-                          unique_font_names_list=font_data[file.filename])
-                          #,complex_formulas_list=formula_data[file.filename])
+                          unique_font_names_list=font_data[file.filename],
+                          complex_formulas_list=formula_data[file.filename])
         db.session.add(new_file)
         db.session.commit()
 
       except Exception as e:
         return f"Error processing the file: {str(e)}"
-  
-  # Pass the data from the files into the session, this is so that the data can be accessed and displayed in the scannung.html page
-  # TODO: instead we would commit this data into the PostgreSQL database (created "file" records, add this data to each file as attributes), then we'd access the data by calling the database in def scanning (we'd need to pass in the Scan ID to the session)
-  session["scan_id"] = new_scan.id
-  session["author_data"] = author_data
-  session["column_data"] = column_data
-  session["font_data"] = font_data
-  session["formula_data"] = formula_data
-  session["chart_data"] = chart_data
 
-  return redirect(url_for(".scanning"))
+  return redirect(url_for(".scan_results"))
 
 def get_template_file_path(request):
   template_file = None
@@ -254,19 +246,22 @@ def get_template_file_path(request):
 @app.route("/scanning")
 @login_required
 def scanning():
-  scan_id = session["scan_id"]
-  author_data = session["author_data"]
-  column_data = session["column_data"]
-  font_data = session["font_data"]
-  formula_data = session["formula_data"]
-  chart_data = session["chart_data"]
 
-  return render_template("scanning.html", author_data=author_data, column_data=column_data, font_data=font_data, formula_data=formula_data, chart_data=chart_data)
+  return render_template("scanning.html")
 
 @app.route("/scan_results")
 @login_required
 def scan_results():
-  return render_template("scan_results.html")
+  scan_id = session["scan_id"]
+  scan_list = ExcelFile.query.filter_by(scan_id=scan_id).all()
+  return render_template("scan_results.html", scan_list=scan_list)
+
+@app.route("/file_details")
+@login_required
+def file_details():
+  file_id = request.args.get('file_id')
+  file = ExcelFile.query.get(file_id)
+  return render_template("file_details.html", file=file)
 
 @app.route("/view_scan")
 @login_required
