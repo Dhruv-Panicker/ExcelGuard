@@ -220,6 +220,7 @@ def begin_scan():
 
       except Exception as e:
         return f"Error processing the file: {str(e)}"
+    session["scan_id"] = new_scan.id
 
   return redirect(url_for(".scan_results"))
 
