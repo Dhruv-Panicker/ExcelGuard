@@ -100,6 +100,7 @@ class TemplateFile(db.Model):
   id = db.Column(db.Integer, primary_key=True)
   scan_id: Mapped[int] = mapped_column(ForeignKey("scans.id"))
   file_name = db.Column(db.String(255))
+  created = db.Column(db.TIMESTAMP)
   creator = db.Column(db.String(255))
   unique_column_width_list = db.Column(ARRAY(db.Float))
   unique_font_names_list = db.Column(ARRAY(db.String(255)))
@@ -172,8 +173,7 @@ def scan_list():
 @login_required
 def begin_scan():
   # Assign uploaded assignment files to assignmentFiles variable
-  assignment_files = request.files.getlist("assignmentFiles")
-  template_file_path = get_template_file_path(request)
+  assignment_files = request.files.getlist("assignmentFiles") 
   
   # Initialize sets to store data from all uploaded files
   author_data = {}
@@ -182,10 +182,11 @@ def begin_scan():
   formula_data = {}
   chart_data = {}
   
-  # Create a record for the newly created scan and commit that record into the PostgreSQL database
-  new_scan = Scan(assignment_name=request.form.get('assignmentName'), course_name=request.form.get('courseCode'), date_created=datetime.now(), number_of_files=len(assignment_files), user_created_by=current_user.username)
-  db.session.add(new_scan)
-  db.session.commit()
+  # Create a new scan record
+  new_scan = create_scan_record(request, assignment_files)
+  
+  # Save the template file and create a record for it
+  template_file_id = get_template_file(request, new_scan.id)
 
   for file in assignment_files:
     if file:
@@ -201,29 +202,22 @@ def begin_scan():
         font_data[file.filename] = extract_font_data(file)
         formula_data[file.filename] = extract_formula_data(file)
         chart_data[file.filename] = extract_chart_data(file)
-
-        new_file = ExcelFile(scan_id=new_scan.id,
-                          file_name=file.filename,
-                          created=author_data[file.filename]["created"],
-                          creator=author_data[file.filename]["creator"],
-                          modified=author_data[file.filename]["modified"],
-                          last_modified_by=author_data[file.filename]["lastModifiedBy"],
-                          submitted_date=datetime.now(),
-                          plagiarism_percentage=0,
-                          unique_column_width_list=column_data[file.filename],
-                          unique_font_names_list=font_data[file.filename],
-                          complex_formulas_list=formula_data[file.filename])
-        db.session.add(new_file)
-        db.session.commit()
+        print(formula_data[file.filename])
+        
+        # Create a new excel_file record and get it's id
+        excel_file_id = create_excel_file_record(file, new_scan.id, author_data[file.filename], font_data[file.filename], column_data[file.filename], formula_data[file.filename])
+        
+        # Create new excel_chart records for the corresponding excel_file
+        create_excel_chart_record(chart_data[file.filename], excel_file_id)
 
       except Exception as e:
-        return f"Error processing the file: {str(e)}"
+        return f"Error  the file: {str(e)}"
 
   return redirect(url_for(".scan_results", scan_id=new_scan.id))
 
-def get_template_file_path(request):
+def get_template_file(request, scan_id):
   template_file = None
-  template_file_path = None
+  template_file_id = None
   # If TemplateFile is uploaded assign it to our templateFile variable to it
   if "templateFile" in request.files:
     if request.files["templateFile"].filename != "":
@@ -237,9 +231,16 @@ def get_template_file_path(request):
       os.makedirs(template_files_folder, exist_ok=True)
       template_file_path = os.path.join(template_files_folder, template_file.filename)
       template_file.save(template_file_path)
+      
+      column_data = extract_column_data(template_file)
+      font_data = extract_font_data(template_file)
+      author_data = extract_author_data(template_file)
+      
+      template_file_id = create_template_file_record(template_file, scan_id, font_data, column_data, author_data)
+      
     except Exception as e:
       return f"Error processing the file: {str(e)}"
-  return template_file_path
+  return template_file_id
   
 @app.route("/scanning")
 @login_required
@@ -414,7 +415,7 @@ def series_output(chart):
         "Formula": series.Formula
       })
   return chart_data
-
+    
 def get_absolute_path(filename):
   # Get the current directory of the script
   current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -477,3 +478,17 @@ def create_excel_chart_record(chart_data, excel_file_id):
       # Add the record to the session and commit
       db.session.add(new_chart)
       db.session.commit()
+
+def create_template_file_record(template_file, scan_id, font_data, column_data, author_data):
+  new_template_file = TemplateFile(scan_id=scan_id,
+                                  file_name=template_file.filename,
+                                  created=author_data["created"],
+                                  creator=author_data["creator"],
+                                  unique_column_width_list=column_data,
+                                  unique_font_names_list=font_data)
+
+  # Add the record to the session and commit
+  db.session.add(new_template_file)
+  db.session.commit()
+
+  return new_template_file.id
