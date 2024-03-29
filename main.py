@@ -198,11 +198,11 @@ def begin_scan():
         assignment_file_path = os.path.join(assignment_files_folder, file.filename)
         file.save(assignment_file_path)
         
-        author_data[file.filename] = get_author_data(file)
-        column_data[file.filename] = get_column_data(file)
-        font_data[file.filename] = get_font_names(file)
-        formula_data[file.filename] = get_formula_data(file)
-        chart_data[file.filename] = get_chart_data(file)
+        author_data[file.filename] = extract_author_data(file)
+        column_data[file.filename] = extract_column_data(file)
+        font_data[file.filename] = extract_font_data(file)
+        formula_data[file.filename] = extract_formula_data(file)
+        chart_data[file.filename] = extract_chart_data(file)
 
         new_file = ExcelFile(scan_id=new_scan.id,
                           file_name=file.filename,
@@ -281,7 +281,7 @@ def load_user(user_id):
 if __name__ == "__main__":
   app.run(host="127.0.0.1", Pport=8080, debug=True)
 
-def get_column_data(excel_file):
+def extract_column_data(excel_file):
   file_column_data = set()
   # Go through each file in the given list of excel files
   try:
@@ -305,7 +305,7 @@ def get_column_data(excel_file):
 
   return list(file_column_data)
 
-def get_author_data(excel_file):
+def extract_author_data(excel_file):
   file_author_data = {}
   try:
     # If the file has no filename, something went wrong
@@ -327,7 +327,7 @@ def get_author_data(excel_file):
 
   return file_author_data
 
-def get_font_names(excel_file):
+def extract_font_data(excel_file):
   font_names_data = []
   try:
     # If the file has no filename, something went wrong
@@ -352,7 +352,7 @@ def get_font_names(excel_file):
 
   return font_names_data
 
-def get_chart_data(excel_file):
+def extract_chart_data(excel_file):
   file_chart_data = []
   # Go through each file in the given list of excel files
   try:
@@ -401,7 +401,7 @@ def get_absolute_path(filename):
 
   return absolute_path
 
-def get_formula_data(excel_file):
+def extract_formula_data(excel_file):
   file_formula_data = []
   try:
     # If the file has no filename, something went wrong
