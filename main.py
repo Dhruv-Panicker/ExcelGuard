@@ -202,7 +202,6 @@ def begin_scan():
         font_data[file.filename] = extract_font_data(file)
         formula_data[file.filename] = extract_formula_data(file)
         chart_data[file.filename] = extract_chart_data(file)
-        print(formula_data[file.filename])
         
         # Create a new excel_file record and get it's id
         excel_file_id = create_excel_file_record(file, new_scan.id, author_data[file.filename], font_data[file.filename], column_data[file.filename], formula_data[file.filename])
@@ -372,7 +371,7 @@ def extract_chart_data(excel_file):
           for chart in sheet.ChartObjects():
             file_chart_data.append(series_output(chart.Chart))
       # Don't save and close workbook (otherwise charts will automatically be removed)
-      excel_workbook.Close()
+      excel_workbook.Close(False)
       excel_app.Quit()
   except Exception as e:
     print(f"Error reading {excel_file}: {str(e)}")
