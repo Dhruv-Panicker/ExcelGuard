@@ -244,7 +244,6 @@ def get_template_file(request, scan_id):
 @app.route("/scanning")
 @login_required
 def scanning():
-
   return render_template("scanning.html")
 
 @app.route("/scan_results")
@@ -252,6 +251,7 @@ def scanning():
 def scan_results():
   scan_id = request.args.get("scan_id")
   scan_list = ExcelFile.query.filter_by(scan_id=scan_id).all()
+  
   return render_template("scan_results.html", scan_list=scan_list)
 
 @app.route("/file_details")
