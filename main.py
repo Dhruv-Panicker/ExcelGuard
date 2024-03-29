@@ -7,6 +7,7 @@ from sqlalchemy import Integer
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
+from sqlalchemy.dialects.postgresql import JSON
 from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user 
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
@@ -90,7 +91,7 @@ class ExcelFile(db.Model):
   plagiarism_percentage = db.Column(db.Integer)
   unique_column_width_list = db.Column(ARRAY(db.Float))
   unique_font_names_list = db.Column(ARRAY(db.String(255)))
-  complex_formulas_list =db.Column(ARRAY(db.String(255)))
+  complex_formulas_list =db.Column(JSON)
   children: Mapped[List["ExcelChart"]] = relationship()
   __tablename__ = "excel_files"
   
@@ -99,6 +100,7 @@ class TemplateFile(db.Model):
   id = db.Column(db.Integer, primary_key=True)
   scan_id: Mapped[int] = mapped_column(ForeignKey("scans.id"))
   file_name = db.Column(db.String(255))
+  created = db.Column(db.TIMESTAMP)
   creator = db.Column(db.String(255))
   unique_column_width_list = db.Column(ARRAY(db.Float))
   unique_font_names_list = db.Column(ARRAY(db.String(255)))
@@ -110,10 +112,7 @@ class ExcelChart(db.Model):
   excel_file_id: Mapped[int] = mapped_column(ForeignKey("excel_files.id"))
   data_source = db.Column(db.String(255))
   chart_type = db.Column(db.String(255))
-  chart_left = db.Column(db.Float)
-  chart_top = db.Column(db.Float)
-  chart_width = db.Column(db.Float)
-  chart_height = db.Column(db.Float)
+  chart_name = db.Column(db.String(255))
   __tablename__ = "excel_charts"
 
 
@@ -174,8 +173,7 @@ def scan_list():
 @login_required
 def begin_scan():
   # Assign uploaded assignment files to assignmentFiles variable
-  assignment_files = request.files.getlist("assignmentFiles")
-  template_file_path = get_template_file_path(request)
+  assignment_files = request.files.getlist("assignmentFiles") 
   
   # Initialize sets to store data from all uploaded files
   author_data = {}
@@ -184,10 +182,11 @@ def begin_scan():
   formula_data = {}
   chart_data = {}
   
-  # Create a record for the newly created scan and commit that record into the PostgreSQL database
-  new_scan = Scan(assignment_name=request.form.get('assignmentName'), course_name=request.form.get('courseCode'), date_created=datetime.now(), number_of_files=len(assignment_files), user_created_by=current_user.username)
-  db.session.add(new_scan)
-  db.session.commit()
+  # Create a new scan record
+  new_scan = create_scan_record(request, assignment_files)
+  
+  # Save the template file and create a record for it
+  template_file_id = get_template_file(request, new_scan.id)
 
   for file in assignment_files:
     if file:
@@ -198,34 +197,27 @@ def begin_scan():
         assignment_file_path = os.path.join(assignment_files_folder, file.filename)
         file.save(assignment_file_path)
         
-        author_data[file.filename] = get_author_data(file)
-        column_data[file.filename] = get_column_data(file)
-        font_data[file.filename] = get_font_names(file)
-        formula_data[file.filename] = get_formula_data(file)
-        chart_data[file.filename] = get_chart_data(file)
-
-        new_file = ExcelFile(scan_id=new_scan.id,
-                          file_name=file.filename,
-                          created=author_data[file.filename]["created"],
-                          creator=author_data[file.filename]["creator"],
-                          modified=author_data[file.filename]["modified"],
-                          last_modified_by=author_data[file.filename]["lastModifiedBy"],
-                          submitted_date=datetime.now(),
-                          plagiarism_percentage=0,
-                          unique_column_width_list=column_data[file.filename],
-                          unique_font_names_list=font_data[file.filename],
-                          complex_formulas_list=formula_data[file.filename])
-        db.session.add(new_file)
-        db.session.commit()
+        author_data[file.filename] = extract_author_data(file)
+        column_data[file.filename] = extract_column_data(file)
+        font_data[file.filename] = extract_font_data(file)
+        formula_data[file.filename] = extract_formula_data(file)
+        chart_data[file.filename] = extract_chart_data(file)
+        print(formula_data[file.filename])
+        
+        # Create a new excel_file record and get it's id
+        excel_file_id = create_excel_file_record(file, new_scan.id, author_data[file.filename], font_data[file.filename], column_data[file.filename], formula_data[file.filename])
+        
+        # Create new excel_chart records for the corresponding excel_file
+        create_excel_chart_record(chart_data[file.filename], excel_file_id)
 
       except Exception as e:
-        return f"Error processing the file: {str(e)}"
+        return f"Error  the file: {str(e)}"
 
   return redirect(url_for(".scan_results", scan_id=new_scan.id))
 
-def get_template_file_path(request):
+def get_template_file(request, scan_id):
   template_file = None
-  template_file_path = None
+  template_file_id = None
   # If TemplateFile is uploaded assign it to our templateFile variable to it
   if "templateFile" in request.files:
     if request.files["templateFile"].filename != "":
@@ -239,9 +231,16 @@ def get_template_file_path(request):
       os.makedirs(template_files_folder, exist_ok=True)
       template_file_path = os.path.join(template_files_folder, template_file.filename)
       template_file.save(template_file_path)
+      
+      column_data = extract_column_data(template_file)
+      font_data = extract_font_data(template_file)
+      author_data = extract_author_data(template_file)
+      
+      template_file_id = create_template_file_record(template_file, scan_id, font_data, column_data, author_data)
+      
     except Exception as e:
       return f"Error processing the file: {str(e)}"
-  return template_file_path
+  return template_file_id
   
 @app.route("/scanning")
 @login_required
@@ -281,7 +280,7 @@ def load_user(user_id):
 if __name__ == "__main__":
   app.run(host="127.0.0.1", Pport=8080, debug=True)
 
-def get_column_data(excel_file):
+def extract_column_data(excel_file):
   file_column_data = set()
   # Go through each file in the given list of excel files
   try:
@@ -305,7 +304,7 @@ def get_column_data(excel_file):
 
   return list(file_column_data)
 
-def get_author_data(excel_file):
+def extract_author_data(excel_file):
   file_author_data = {}
   try:
     # If the file has no filename, something went wrong
@@ -327,7 +326,7 @@ def get_author_data(excel_file):
 
   return file_author_data
 
-def get_font_names(excel_file):
+def extract_font_data(excel_file):
   font_names_data = []
   try:
     # If the file has no filename, something went wrong
@@ -352,7 +351,7 @@ def get_font_names(excel_file):
 
   return font_names_data
 
-def get_chart_data(excel_file):
+def extract_chart_data(excel_file):
   file_chart_data = []
   # Go through each file in the given list of excel files
   try:
@@ -380,6 +379,30 @@ def get_chart_data(excel_file):
 
   return file_chart_data
 
+def extract_formula_data(excel_file):
+  file_formula_data = {}
+  try:
+    # If the file has no filename, something went wrong
+    if excel_file.filename == "":
+      print(f"Could not retrieve filename from {excel_file}")
+    else:
+      # Otherwise save the file, open the workbook, and get the formula from every cell which contains a formula
+      if excel_file:
+        assignment_files_folder = "scan_assignment_uploads"
+        assignment_file_path = os.path.join(assignment_files_folder, excel_file.filename)
+        excel_workbook = load_workbook(assignment_file_path)
+        for sheet_name in excel_workbook.sheetnames:
+          excel_sheet = excel_workbook[sheet_name]
+          for row in excel_sheet.iter_rows(min_row=1, max_col=excel_sheet.max_column, max_row=excel_sheet.max_row):
+            for cell in row:
+              if cell.data_type == "f":
+                cell_position = f"{sheet_name}_{cell.coordinate}"
+                file_formula_data[cell_position] = cell.value
+  except Exception as e:
+    print(f"Error reading {file_formula_data}: {str(e)}")
+
+  return file_formula_data
+
 def series_output(chart):
   chart_data = {
       "Chart Name": chart.Name,
@@ -401,25 +424,71 @@ def get_absolute_path(filename):
 
   return absolute_path
 
-def get_formula_data(excel_file):
-  file_formula_data = []
-  try:
-    # If the file has no filename, something went wrong
-    if excel_file.filename == "":
-      print(f"Could not retrieve filename from {excel_file}")
-    else:
-      # Otherwise save the file, open the workbook, and get the formula from every cell which contains a formula
-      if excel_file:
-        assignment_files_folder = "scan_assignment_uploads"
-        assignment_file_path = os.path.join(assignment_files_folder, excel_file.filename)
-        excel_workbook = load_workbook(assignment_file_path)
-        for sheet_name in excel_workbook.sheetnames:
-          excel_sheet = excel_workbook[sheet_name]
-          for row in excel_sheet.iter_rows(min_row=1, max_col=excel_sheet.max_column, max_row=excel_sheet.max_row):
-            for cell in row:
-              if cell.data_type == "f":
-                file_formula_data.append(cell.value)
-  except Exception as e:
-    print(f"Error reading {file_formula_data}: {str(e)}")
+def create_scan_record(request, assignment_files):
+  # Create a new scan record
+  new_scan = Scan(assignment_name=request.form.get('assignmentName'), 
+                  course_name=request.form.get('courseCode'), 
+                  date_created=datetime.now(), 
+                  number_of_files=len(assignment_files), 
+                  user_created_by=current_user.username)
+  
+  # Add the record to the session and commit
+  db.session.add(new_scan)
+  db.session.commit()
+  
+  return new_scan
 
-  return file_formula_data
+def create_excel_file_record(file, scan_id, author_data, font_data, column_data, formula_data):
+  # Create a new excel file record
+  new_file = ExcelFile(scan_id=scan_id,
+                        file_name=file.filename,
+                        created=author_data["created"],
+                        creator=author_data["creator"],
+                        modified=author_data["modified"],
+                        last_modified_by=author_data["lastModifiedBy"],
+                        submitted_date=datetime.now(),
+                        plagiarism_percentage=0,
+                        unique_column_width_list=column_data,
+                        unique_font_names_list=font_data,
+                        complex_formulas_list=formula_data)
+
+  # Add the record to the session and commit
+  db.session.add(new_file)
+  db.session.commit()
+
+  return new_file.id
+
+def create_excel_chart_record(chart_data, excel_file_id):
+    for chart in chart_data:
+      chart_name = chart["Chart Name"]
+      chart_type = chart["Chart Type"]
+      data_source = chart["Series"]
+
+      # Convert the data_source to a string
+      data_source_str = ', '.join([f'"{series["Formula"]}"' for series in data_source])
+
+      # Create a new ExcelChart record
+      new_chart = ExcelChart(
+        excel_file_id = excel_file_id,
+        data_source = data_source_str,
+        chart_type = chart_type,
+        chart_name = chart_name
+      )
+
+      # Add the record to the session and commit
+      db.session.add(new_chart)
+      db.session.commit()
+
+def create_template_file_record(template_file, scan_id, font_data, column_data, author_data):
+  new_template_file = TemplateFile(scan_id=scan_id,
+                                  file_name=template_file.filename,
+                                  created=author_data["created"],
+                                  creator=author_data["creator"],
+                                  unique_column_width_list=column_data,
+                                  unique_font_names_list=font_data)
+
+  # Add the record to the session and commit
+  db.session.add(new_template_file)
+  db.session.commit()
+
+  return new_template_file.id
