@@ -7,6 +7,7 @@ from sqlalchemy import Integer
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
+from sqlalchemy.dialects.postgresql import JSON
 from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user 
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
@@ -90,7 +91,7 @@ class ExcelFile(db.Model):
   plagiarism_percentage = db.Column(db.Integer)
   unique_column_width_list = db.Column(ARRAY(db.Float))
   unique_font_names_list = db.Column(ARRAY(db.String(255)))
-  complex_formulas_list =db.Column(ARRAY(db.String(255)))
+  complex_formulas_list =db.Column(JSON)
   children: Mapped[List["ExcelChart"]] = relationship()
   __tablename__ = "excel_files"
   
@@ -198,6 +199,7 @@ def begin_scan():
         font_data[file.filename] = extract_font_data(file)
         formula_data[file.filename] = extract_formula_data(file)
         chart_data[file.filename] = extract_chart_data(file)
+        print(formula_data[file.filename])
         
         # Create a new excel_file record and get it's id
         excel_file_id = create_excel_file_record(file, new_scan.id, author_data[file.filename], font_data[file.filename], column_data[file.filename], formula_data[file.filename])
@@ -367,6 +369,30 @@ def extract_chart_data(excel_file):
 
   return file_chart_data
 
+def extract_formula_data(excel_file):
+  file_formula_data = {}
+  try:
+    # If the file has no filename, something went wrong
+    if excel_file.filename == "":
+      print(f"Could not retrieve filename from {excel_file}")
+    else:
+      # Otherwise save the file, open the workbook, and get the formula from every cell which contains a formula
+      if excel_file:
+        assignment_files_folder = "scan_assignment_uploads"
+        assignment_file_path = os.path.join(assignment_files_folder, excel_file.filename)
+        excel_workbook = load_workbook(assignment_file_path)
+        for sheet_name in excel_workbook.sheetnames:
+          excel_sheet = excel_workbook[sheet_name]
+          for row in excel_sheet.iter_rows(min_row=1, max_col=excel_sheet.max_column, max_row=excel_sheet.max_row):
+            for cell in row:
+              if cell.data_type == "f":
+                cell_position = f"{sheet_name}_{cell.coordinate}"
+                file_formula_data[cell_position] = cell.value
+  except Exception as e:
+    print(f"Error reading {file_formula_data}: {str(e)}")
+
+  return file_formula_data
+
 def series_output(chart):
   chart_data = {
       "Chart Name": chart.Name,
@@ -387,29 +413,6 @@ def get_absolute_path(filename):
   absolute_path = os.path.join(current_dir, "scan_assignment_uploads", filename)
 
   return absolute_path
-
-def extract_formula_data(excel_file):
-  file_formula_data = []
-  try:
-    # If the file has no filename, something went wrong
-    if excel_file.filename == "":
-      print(f"Could not retrieve filename from {excel_file}")
-    else:
-      # Otherwise save the file, open the workbook, and get the formula from every cell which contains a formula
-      if excel_file:
-        assignment_files_folder = "scan_assignment_uploads"
-        assignment_file_path = os.path.join(assignment_files_folder, excel_file.filename)
-        excel_workbook = load_workbook(assignment_file_path)
-        for sheet_name in excel_workbook.sheetnames:
-          excel_sheet = excel_workbook[sheet_name]
-          for row in excel_sheet.iter_rows(min_row=1, max_col=excel_sheet.max_column, max_row=excel_sheet.max_row):
-            for cell in row:
-              if cell.data_type == "f":
-                file_formula_data.append(cell.value)
-  except Exception as e:
-    print(f"Error reading {file_formula_data}: {str(e)}")
-
-  return file_formula_data
 
 def create_scan_record(request, assignment_files):
   # Create a new scan record
