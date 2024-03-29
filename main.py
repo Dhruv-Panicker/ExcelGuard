@@ -381,6 +381,7 @@ def extract_chart_data(excel_file):
 
 def extract_formula_data(excel_file):
   file_formula_data = {}
+  complex_formula_data = {}
   try:
     # If the file has no filename, something went wrong
     if excel_file.filename == "":
@@ -398,9 +399,13 @@ def extract_formula_data(excel_file):
               if cell.data_type == "f":
                 cell_position = f"{sheet_name}_{cell.coordinate}"
                 file_formula_data[cell_position] = cell.value
+                # Filter formulas length > 9
+                if len(cell.value) > 9:
+                    complex_formula_data[cell_position] = cell.value
   except Exception as e:
     print(f"Error reading {file_formula_data}: {str(e)}")
-
+  # print
+  print(complex_formula_data)
   return file_formula_data
 
 def series_output(chart):
