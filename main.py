@@ -110,10 +110,7 @@ class ExcelChart(db.Model):
   excel_file_id: Mapped[int] = mapped_column(ForeignKey("excel_files.id"))
   data_source = db.Column(db.String(255))
   chart_type = db.Column(db.String(255))
-  chart_left = db.Column(db.Float)
-  chart_top = db.Column(db.Float)
-  chart_width = db.Column(db.Float)
-  chart_height = db.Column(db.Float)
+  chart_name = db.Column(db.String(255))
   __tablename__ = "excel_charts"
 
 
@@ -184,10 +181,8 @@ def begin_scan():
   formula_data = {}
   chart_data = {}
   
-  # Create a record for the newly created scan and commit that record into the PostgreSQL database
-  new_scan = Scan(assignment_name=request.form.get('assignmentName'), course_name=request.form.get('courseCode'), date_created=datetime.now(), number_of_files=len(assignment_files), user_created_by=current_user.username)
-  db.session.add(new_scan)
-  db.session.commit()
+  # Create a new scan record
+  new_scan = create_scan_record(request, assignment_files)
 
   for file in assignment_files:
     if file:
@@ -203,23 +198,15 @@ def begin_scan():
         font_data[file.filename] = extract_font_data(file)
         formula_data[file.filename] = extract_formula_data(file)
         chart_data[file.filename] = extract_chart_data(file)
-
-        new_file = ExcelFile(scan_id=new_scan.id,
-                          file_name=file.filename,
-                          created=author_data[file.filename]["created"],
-                          creator=author_data[file.filename]["creator"],
-                          modified=author_data[file.filename]["modified"],
-                          last_modified_by=author_data[file.filename]["lastModifiedBy"],
-                          submitted_date=datetime.now(),
-                          plagiarism_percentage=0,
-                          unique_column_width_list=column_data[file.filename],
-                          unique_font_names_list=font_data[file.filename],
-                          complex_formulas_list=formula_data[file.filename])
-        db.session.add(new_file)
-        db.session.commit()
+        
+        # Create a new excel_file record and get it's id
+        excel_file_id = create_excel_file_record(file, new_scan.id, author_data[file.filename], font_data[file.filename], column_data[file.filename], formula_data[file.filename])
+        
+        # Create new excel_chart records for the corresponding excel_file
+        create_excel_chart_record(chart_data[file.filename], excel_file_id)
 
       except Exception as e:
-        return f"Error processing the file: {str(e)}"
+        return f"Error  the file: {str(e)}"
 
   return redirect(url_for(".scan_results", scan_id=new_scan.id))
 
@@ -423,3 +410,58 @@ def extract_formula_data(excel_file):
     print(f"Error reading {file_formula_data}: {str(e)}")
 
   return file_formula_data
+
+def create_scan_record(request, assignment_files):
+  # Create a new scan record
+  new_scan = Scan(assignment_name=request.form.get('assignmentName'), 
+                  course_name=request.form.get('courseCode'), 
+                  date_created=datetime.now(), 
+                  number_of_files=len(assignment_files), 
+                  user_created_by=current_user.username)
+  
+  # Add the record to the session and commit
+  db.session.add(new_scan)
+  db.session.commit()
+  
+  return new_scan
+
+def create_excel_file_record(file, scan_id, author_data, font_data, column_data, formula_data):
+  # Create a new excel file record
+  new_file = ExcelFile(scan_id=scan_id,
+                        file_name=file.filename,
+                        created=author_data["created"],
+                        creator=author_data["creator"],
+                        modified=author_data["modified"],
+                        last_modified_by=author_data["lastModifiedBy"],
+                        submitted_date=datetime.now(),
+                        plagiarism_percentage=0,
+                        unique_column_width_list=column_data,
+                        unique_font_names_list=font_data,
+                        complex_formulas_list=formula_data)
+
+  # Add the record to the session and commit
+  db.session.add(new_file)
+  db.session.commit()
+
+  return new_file.id
+
+def create_excel_chart_record(chart_data, excel_file_id):
+    for chart in chart_data:
+      chart_name = chart["Chart Name"]
+      chart_type = chart["Chart Type"]
+      data_source = chart["Series"]
+
+      # Convert the data_source to a string
+      data_source_str = ', '.join([f'"{series["Formula"]}"' for series in data_source])
+
+      # Create a new ExcelChart record
+      new_chart = ExcelChart(
+        excel_file_id = excel_file_id,
+        data_source = data_source_str,
+        chart_type = chart_type,
+        chart_name = chart_name
+      )
+
+      # Add the record to the session and commit
+      db.session.add(new_chart)
+      db.session.commit()
