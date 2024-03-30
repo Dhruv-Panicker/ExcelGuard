@@ -260,9 +260,10 @@ def scan_results():
 def file_details():
   file_id = request.args.get('file_id')
   file = ExcelFile.query.get(file_id)
+  file_name = file.file_name
   charts = file.children
   suspicious_charts = perform_checks(file.scan_id, db, ExcelFile, ExcelChart)
-  return render_template("file_details.html", file=file, charts=charts, suspicious_charts=suspicious_charts)
+  return render_template("file_details.html", file=file, file_name=file_name, charts=charts, suspicious_charts=suspicious_charts)
 
 @app.route("/view_scan")
 @login_required
