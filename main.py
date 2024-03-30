@@ -20,6 +20,7 @@ from typing import List
 import pythoncom
 # Since this is needed to extract data on charts, the application MUST be running on Windows
 import win32com.client as client
+from classes.formula import Formula
 
 app = Flask(__name__)
 Bootstrap(app)
@@ -196,17 +197,17 @@ def begin_scan():
         os.makedirs(assignment_files_folder, exist_ok=True)
         assignment_file_path = os.path.join(assignment_files_folder, file.filename)
         file.save(assignment_file_path)
-        
+
         author_data[file.filename] = extract_author_data(file)
         column_data[file.filename] = extract_column_data(file)
         font_data[file.filename] = extract_font_data(file)
         formula_data[file.filename] = extract_formula_data(file)
         chart_data[file.filename] = extract_chart_data(file)
         print(formula_data[file.filename])
-        
+
         # Create a new excel_file record and get it's id
         excel_file_id = create_excel_file_record(file, new_scan.id, author_data[file.filename], font_data[file.filename], column_data[file.filename], formula_data[file.filename])
-        
+
         # Create new excel_chart records for the corresponding excel_file
         create_excel_chart_record(chart_data[file.filename], excel_file_id)
 
@@ -279,6 +280,7 @@ def load_user(user_id):
 
 if __name__ == "__main__":
   app.run(host="127.0.0.1", Pport=8080, debug=True)
+
 
 def extract_column_data(excel_file):
   file_column_data = set()
@@ -398,14 +400,27 @@ def extract_formula_data(excel_file):
             for cell in row:
               if cell.data_type == "f":
                 cell_position = f"{sheet_name}_{cell.coordinate}"
-                file_formula_data[cell_position] = cell.value
-                # Filter formulas length > 9
-                if len(cell.value) > 9:
-                    complex_formula_data[cell_position] = cell.value
+
+                # Filter string-formulas (BUG: DataTableFormulas throw SQL insertion errors)
+                if isinstance(cell.value, str):
+                  file_formula_data[cell_position] = cell.value
+
+                # Filter string-formulas that are at least 8 characters long
+                  if len(cell.value) > 7:
+
+                    # Using class.formula.Formula class to store the complex Formulas
+                    complex_formula_data[cell_position] = Formula(cell.value)
+
+                # Catch any non-string formulas and print to console what they are
+                else:
+                  print(f"Potential non-string formula: {cell.value}")
+
   except Exception as e:
     print(f"Error reading {file_formula_data}: {str(e)}")
-  # print
-  print(complex_formula_data)
+
+  # TESTING: see that the correct formulas are being stored in complex formula dictionary
+  print(f"Complex Formulas: {complex_formula_data}")
+
   return file_formula_data
 
 def series_output(chart):
