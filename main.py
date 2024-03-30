@@ -20,6 +20,7 @@ from typing import List
 import pythoncom
 # Since this is needed to extract data on charts, the application MUST be running on Windows
 import win32com.client as client
+from algorithim.plagiarism_checker import perform_checks
 
 app = Flask(__name__)
 Bootstrap(app)
@@ -260,7 +261,8 @@ def file_details():
   file_id = request.args.get('file_id')
   file = ExcelFile.query.get(file_id)
   charts = file.children
-  return render_template("file_details.html", file=file, charts=charts)
+  suspicious_charts = perform_checks(file.scan_id, db, ExcelFile, ExcelChart)
+  return render_template("file_details.html", file=file, charts=charts, suspicious_charts=suspicious_charts)
 
 @app.route("/view_scan")
 @login_required
