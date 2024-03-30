@@ -15,6 +15,13 @@
   {% block content %}
   <div class="container">
     <a href="{{ url_for('scan_results', scan_id=file.scan_id) }}" class="btn btn-primary float-right">Back to Scan Results</a>
+    {% if suspicious_charts %}
+      <h3 class="text-light">Suspicious Charts have been found!</h3>
+      {% for key, value in suspicious_charts.items() %}
+      <li class="text-light">{{ key }}: {{ value }}</li>
+      {% endfor %}
+      <br>
+    {% endif %}
     <h3 class="text-light">Author Data</h3>
     <ul class="text-light">
       <ul><strong>Filename - </strong>{{file.file_name}}
