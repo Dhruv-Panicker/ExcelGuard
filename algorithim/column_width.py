@@ -1,24 +1,28 @@
-def check_coloumn_data(file_column_data, template_column_data):
-    #Set where all the suspicious files will be added 
-    suspicious_files = set()
+def check_column_width(file_column_data, template_column_data):
+    suspicious_details = []
+    template_column_set = set(template_column_data)
 
-    #Convert the template file coloumn data into a set for lookup 
-    template_column_data = set(template_column_data)
+    # Iterate through each pair of files
+    for filename1, columns1 in file_column_data.items():
+        for filename2, columns2 in file_column_data.items():
+            if filename1 == filename2:
+                continue  # Skip comparing the file with itself
 
-    # Store a dictionary mapping the column width set to the filenames that have it
-    column_set_to_files = {}
+            # Find common columns between the two files that are not in the template
+            common_unique_columns = set(columns1).intersection(columns2) - template_column_set
 
-    for filename, columns in file_column_data.items(): 
-        if set(columns) == template_column_data: 
-            continue
-        # hashable version of a set that can be used as a key in a dictionary.
-        column_width_key = frozenset(columns)  
+            if common_unique_columns:
+                # If there are common columns not in the template, flag both files
+                suspicious_details.append((filename1, tuple(common_unique_columns)))
+                suspicious_details.append((filename2, tuple(common_unique_columns)))
 
-        if column_width_key not in column_set_to_files: 
-            column_set_to_files[column_width_key] = {filename}
-        else: 
-            #If the theres already a file with this coloumn width then mark it as suspicious
-            column_set_to_files[column_width_key].add(filename)
-            suspicious_files.update(column_set_to_files[column_width_key])
-    
-    return list(suspicious_files)
+    # Remove duplicates while preserving order
+    seen = set()
+    suspicious_files = []
+    for filename, column_set in suspicious_details:
+        if (filename, column_set) not in seen:
+            # Convert tuple back to list for output
+            suspicious_files.append((filename, list(column_set)))
+            seen.add((filename, column_set))
+
+    return suspicious_files
