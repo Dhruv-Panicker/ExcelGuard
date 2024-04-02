@@ -1,3 +1,5 @@
+import datetime
+
 def check_author_data(author_data, template_author_data):
     suspicious_files  = []
 
@@ -8,6 +10,9 @@ def check_author_data(author_data, template_author_data):
         file_created_date = authordata.get("created", None)
         file_last_modified = authordata.get("lastModifiedBy", None)
         file_creator = authordata.get("creator", None)
+
+        file_last_modified.strftime('%m/%d/%Y')
+        file_created_date.strftime('%m/%d/%Y')
 
         #Check if the student file was even made before creation og the template file 
         if file_created_date < template_create_date: 
@@ -20,6 +25,9 @@ def check_author_data(author_data, template_author_data):
                     comparison_creator = comparison_data.get("creator")
                     comparison_last_modified = comparison_data.get("lastModifiedBy")
                     comparison_created_date = comparison_data.get("created")
+
+                    comparison_last_modified.strftime('%m/%d/%Y')
+                    comparison_created_date.strftime('%m/%d/%Y')
 
                     #Check if files have the same creator 
                     if file_creator == comparison_creator and file_creator != None: 
