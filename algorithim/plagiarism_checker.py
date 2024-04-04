@@ -15,7 +15,7 @@ def perform_checks(scan_id, db, ExcelFile, ExcelChart):
   # fingerprint_data = get_fingerprint_data(scan_id)
   # column_width_data = get_column_width_data(scan_id)
   # author_data = get_author_data(scan_id)
-  # font_data = get_font_data(scan_id)
+  font_data = get_font_data(scan_id)
   chart_data = get_chart_data(scan_id, db, ExcelFile, ExcelChart)
   # formula_data = get_formula_data(scan_id)
 
@@ -24,8 +24,8 @@ def perform_checks(scan_id, db, ExcelFile, ExcelChart):
   # fingerprint_score = check_fingerprint_data(fingerprint_data)
   # column_width_score = check_column_data(column_width_data)
   # author_data_score = check_author_data(author_data)
-  # font_data_score = check_font_data(font_data)
-  suspicious_charts = check_chart_data(chart_data)
+  font_component_score = check_font_data(font_data)
+  chart_component_score = check_chart_data(chart_data)
   # formula_data_score = check_formula_data(formula_data)
 
   # Aggregate the scores.
@@ -33,7 +33,7 @@ def perform_checks(scan_id, db, ExcelFile, ExcelChart):
   #               + font_data_score + formula_data_score) / 7  # Example averaging 
 
   # Return the total score
-  return suspicious_charts
+  return chart_component_score
 
 def get_fingerprint_data(scan_id):
   #TODO
