@@ -14,14 +14,12 @@ def check_chart_data(chart_data):
       
       # Check if the x source filename matches any file name
       if x_source_filename in file_names:
-        x_filename = "x_data_" + x_source_filename
-        suspicious_charts[file_name].append(x_filename)  
-        print(f"Chart '{chart_name}' in file '{file_name}' has a matching x source filename with file '{x_source_filename}'.")
+        flagged_message = f"Chart '{chart_name}' has a matching x source filename with file '{x_source_filename}'."
+        suspicious_charts[file_name].append(flagged_message) 
       
       # Check if the y source filename matches any file name
       if y_source_filename in file_names:
-        y_filename = "y_data_" + y_source_filename
-        suspicious_charts[file_name].append(y_filename)  
-        print(f"Chart '{chart_name}' in file '{file_name}' has a matching y source filename with file '{y_source_filename}'.")
+        flagged_message = f"Chart '{chart_name}' has a matching y source filename with file '{y_source_filename}'."
+        suspicious_charts[file_name].append(flagged_message)  
 
   return suspicious_charts
