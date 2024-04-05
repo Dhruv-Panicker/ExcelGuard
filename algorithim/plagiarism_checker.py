@@ -10,13 +10,13 @@ DEFAULT_SERIES_FILE_DATA_SOURCE = "Current Worksheet"
 FORMULA_INSIDE_BRACKETS = r'\(([^)]+)\)'
 FORMULA_INSIDE_SQUARE_BRACKETS = r'\[([^\]]+)\]'
 
-def perform_checks(scan_id, db, ExcelFile, ExcelChart, TemplateFile):
+def perform_checks(scan_id, ExcelFile, ExcelChart, TemplateFile):
   template_data = get_template_file_data(scan_id, TemplateFile)
   # fingerprint_data = get_fingerprint_data(scan_id, ExcelFile)
   # column_width_data = get_column_width_data(scan_id, ExcelFile)
   # author_data = get_author_data(scan_id, ExcelFile)
-  font_data = get_font_data(scan_id, db, ExcelFile)
-  chart_data = get_chart_data(scan_id, db, ExcelFile, ExcelChart)
+  font_data = get_font_data(scan_id, ExcelFile)
+  chart_data = get_chart_data(scan_id, ExcelFile, ExcelChart)
   # formula_data = get_formula_data(scan_id, ExcelFile)
 
   # Calculate scores from each individual check
@@ -80,7 +80,7 @@ def get_author_data(scan_id, ExcelFile):
       }
   return author_data
 
-def get_font_data(scan_id, db, ExcelFile):
+def get_font_data(scan_id, ExcelFile):
   files = ExcelFile.query.filter_by(scan_id=scan_id).all()
   font_data = {}
   
@@ -88,7 +88,7 @@ def get_font_data(scan_id, db, ExcelFile):
     font_data[file.file_name] = file.unique_font_names_list
   return font_data
 
-def get_chart_data(scan_id, db, ExcelFile, ExcelChart):
+def get_chart_data(scan_id, ExcelFile, ExcelChart):
   files = ExcelFile.query.filter_by(scan_id=scan_id).all()
   chart_data = {}
   for file in files:
@@ -131,7 +131,7 @@ def get_chart_data(scan_id, db, ExcelFile, ExcelChart):
       chart_data[file.file_name][chart.chart_name] = chart_info
   return chart_data
 
-def get_formula_data(scan_id, db, ExcelFile):
+def get_formula_data(scan_id, ExcelFile):
   files = ExcelFile.query.filter_by(scan_id=scan_id).all()
   formula_data = {}
   
@@ -139,7 +139,7 @@ def get_formula_data(scan_id, db, ExcelFile):
     formula_data[file.file_name] = file.complex_formulas_list
   return formula_data
 
-# Function that will get all data from the tempate file from db 
+# Function that will get all data from the template file from db 
 def get_template_file_data(scan_id, TemplateFile):
     template_file = TemplateFile.query.filter_by(scan_id=scan_id).first()
 
