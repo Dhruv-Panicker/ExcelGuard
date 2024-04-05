@@ -262,7 +262,7 @@ def file_details():
   file = ExcelFile.query.get(file_id)
   file_name = file.file_name
   charts = file.children
-  suspicious_charts = perform_checks(file.scan_id, db, ExcelFile, ExcelChart)
+  suspicious_charts = perform_checks(file.scan_id, db, ExcelFile, ExcelChart, TemplateFile)
   return render_template("file_details.html", file=file, file_name=file_name, charts=charts, suspicious_charts=suspicious_charts)
 
 @app.route("/view_scan")
