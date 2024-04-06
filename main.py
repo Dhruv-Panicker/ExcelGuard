@@ -92,7 +92,13 @@ class ExcelFile(db.Model):
   plagiarism_percentage = db.Column(db.Integer)
   unique_column_width_list = db.Column(ARRAY(db.Float))
   unique_font_names_list = db.Column(ARRAY(db.String(255)))
-  complex_formulas_list =db.Column(JSON)
+  complex_formulas_list = db.Column(JSON)
+  fingerprint_results = db.Column(JSON)
+  column_data_results = db.Column(JSON)
+  author_data_results = db.Column(JSON)
+  font_data_results = db.Column(JSON)
+  chart_data_results = db.Column(JSON)
+  formula_data_results = db.Column(JSON)
   children: Mapped[List["ExcelChart"]] = relationship()
   __tablename__ = "excel_files"
   
@@ -153,6 +159,7 @@ def register():
       db.session.commit()
       print("User added successfully")  # Debugging message
     except Exception as e:
+      db.session.rollback()
       print("Failed to add user:", e) 
       return redirect(url_for("login"))
   else:
@@ -262,7 +269,8 @@ def file_details():
   file = ExcelFile.query.get(file_id)
   file_name = file.file_name
   charts = file.children
-  suspicious_charts = perform_checks(file.scan_id, db, ExcelFile, ExcelChart, TemplateFile)
+  perform_checks(file.scan_id, db, ExcelFile, ExcelChart, TemplateFile)
+  suspicious_charts = file.chart_data_results
   return render_template("file_details.html", file=file, file_name=file_name, charts=charts, suspicious_charts=suspicious_charts)
 
 @app.route("/view_scan")
@@ -427,40 +435,49 @@ def get_absolute_path(filename):
   return absolute_path
 
 def create_scan_record(request, assignment_files):
-  # Create a new scan record
-  new_scan = Scan(assignment_name=request.form.get('assignmentName'), 
-                  course_name=request.form.get('courseCode'), 
-                  date_created=datetime.now(), 
-                  number_of_files=len(assignment_files), 
-                  user_created_by=current_user.username)
-  
-  # Add the record to the session and commit
-  db.session.add(new_scan)
-  db.session.commit()
+  try:
+    # Create a new scan record
+    new_scan = Scan(assignment_name=request.form.get('assignmentName'), 
+                    course_name=request.form.get('courseCode'), 
+                    date_created=datetime.now(), 
+                    number_of_files=len(assignment_files), 
+                    user_created_by=current_user.username)
+    
+    # Add the record to the session and commit
+    db.session.add(new_scan)
+    db.session.commit()
+  except Exception as e:
+    db.session.rollback()
+    print("Error creating scan record:", e)
   
   return new_scan
 
 def create_excel_file_record(file, scan_id, author_data, font_data, column_data, formula_data):
-  # Create a new excel file record
-  new_file = ExcelFile(scan_id=scan_id,
-                        file_name=file.filename,
-                        created=author_data["created"],
-                        creator=author_data["creator"],
-                        modified=author_data["modified"],
-                        last_modified_by=author_data["lastModifiedBy"],
-                        submitted_date=datetime.now(),
-                        plagiarism_percentage=0,
-                        unique_column_width_list=column_data,
-                        unique_font_names_list=font_data,
-                        complex_formulas_list=formula_data)
+  try:
+    # Create a new excel file record
+    new_file = ExcelFile(scan_id=scan_id,
+                          file_name=file.filename,
+                          created=author_data["created"],
+                          creator=author_data["creator"],
+                          modified=author_data["modified"],
+                          last_modified_by=author_data["lastModifiedBy"],
+                          submitted_date=datetime.now(),
+                          plagiarism_percentage=0,
+                          unique_column_width_list=column_data,
+                          unique_font_names_list=font_data,
+                          complex_formulas_list=formula_data)
 
-  # Add the record to the session and commit
-  db.session.add(new_file)
-  db.session.commit()
+    # Add the record to the session and commit
+    db.session.add(new_file)
+    db.session.commit()
+  except Exception as e:
+    db.session.rollback()
+    print("Error creating excel file record:", e)
 
   return new_file.id
 
 def create_excel_chart_record(chart_data, excel_file_id):
+  try:
     for chart in chart_data:
       chart_name = chart["Chart Name"]
       chart_type = chart["Chart Type"]
@@ -480,17 +497,24 @@ def create_excel_chart_record(chart_data, excel_file_id):
       # Add the record to the session and commit
       db.session.add(new_chart)
       db.session.commit()
+  except Exception as e:
+    db.session.rollback()
+    print("Error creating excel chart record:", e)
 
 def create_template_file_record(template_file, scan_id, font_data, column_data, author_data):
-  new_template_file = TemplateFile(scan_id=scan_id,
-                                  file_name=template_file.filename,
-                                  created=author_data["created"],
-                                  creator=author_data["creator"],
-                                  unique_column_width_list=column_data,
-                                  unique_font_names_list=font_data)
+  try:
+    new_template_file = TemplateFile(scan_id=scan_id,
+                                    file_name=template_file.filename,
+                                    created=author_data["created"],
+                                    creator=author_data["creator"],
+                                    unique_column_width_list=column_data,
+                                    unique_font_names_list=font_data)
 
-  # Add the record to the session and commit
-  db.session.add(new_template_file)
-  db.session.commit()
+    # Add the record to the session and commit
+    db.session.add(new_template_file)
+    db.session.commit()
+  except Exception as e:
+    db.session.rollback()
+    print("Error creating template file record:", e)
 
   return new_template_file.id
