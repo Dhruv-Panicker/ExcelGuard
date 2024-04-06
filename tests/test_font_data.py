@@ -1,6 +1,5 @@
 import sys
 import os
-# Add the project root directory to the sys.path list
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from algorithim.font_data import check_font_data
 from unittest.mock import patch
@@ -20,7 +19,6 @@ def test_check_font_data_with_unique_uncommon_fonts():
       1: ([], 0),
       2: ([], 0),
       3: ([], 0)}
-    print(check_font_data(font_data, db, template_data, ExcelFile))
     assert check_font_data(font_data, db, template_data, ExcelFile) == expected_result
     assert not mock_db.session.query.called
     assert not mock_db.session.commit.called
