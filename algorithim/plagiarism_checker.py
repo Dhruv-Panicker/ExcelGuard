@@ -12,8 +12,8 @@ FORMULA_INSIDE_SQUARE_BRACKETS = r'\[([^\]]+)\]'
 
 def perform_checks(scan_id, db, ExcelFile, ExcelChart, TemplateFile):
   template_data = get_template_file_data(scan_id, TemplateFile)
-  # fingerprint_data = get_fingerprint_data(scan_id, ExcelFile)
-  # column_width_data = get_column_width_data(scan_id, ExcelFile)
+  fingerprint_data = get_fingerprint_data(scan_id, ExcelFile)
+  column_width_data = get_column_width_data(scan_id, ExcelFile)
   author_data = get_author_data(scan_id, ExcelFile)
   font_data = get_font_data(scan_id, ExcelFile)
   chart_data = get_chart_data(scan_id, ExcelFile, ExcelChart)
@@ -21,8 +21,8 @@ def perform_checks(scan_id, db, ExcelFile, ExcelChart, TemplateFile):
 
   # Calculate scores from each individual check
   chart_data_scores = 0
-  # fingerprint_score = check_fingerprint_data(fingerprint_data)
-  # column_width_files = check_column_width(column_width_data, template_data["column_data"] if template_data else [])
+  fingerprint_score = check_fingerprint_data(fingerprint_data)
+  column_width_files = check_column_width(column_width_data, template_data["column_data"] if template_data else [])
   author_data_files = check_author_data(author_data, db, ExcelFile, template_data["author_data"] if template_data else None)
   font_component_score = check_font_data(font_data, db, template_data, ExcelFile)
   chart_component_score = check_chart_data(chart_data, db, ExcelFile)
@@ -51,7 +51,6 @@ def get_fingerprint_data(scan_id, ExcelFile):
         "formula_data": formula_data, 
       }
     return fingerprint_data
-
 
 def get_column_width_data(scan_id, ExcelFile):
   # Query all excel_files which have the scan_id
@@ -119,6 +118,7 @@ def get_chart_data(scan_id, ExcelFile, ExcelChart):
         y_source_filename = y_data_source_match[0]
 
       chart_info = {
+        "file_name": file.file_name,
         "chart_name": chart.chart_name,
         "chart_type": chart.chart_type,
         "data_x_source": data_x_source,
