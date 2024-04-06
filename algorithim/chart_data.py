@@ -1,8 +1,6 @@
 def check_chart_data(chart_data, db, ExcelFile):
   suspicious_charts = {}
-  file_ids = list(chart_data.keys())
-  excel_files = db.session.query(ExcelFile).filter(ExcelFile.id.in_(file_ids)).all()
-  file_names = [excel_file.file_name for excel_file in excel_files]
+  file_names = [chart['file_name'] for chart_dict in chart_data.values() for chart in chart_dict.values()]
 
   # Iterate over each chart in each file
   for file_id, charts in chart_data.items():
@@ -32,4 +30,5 @@ def check_chart_data(chart_data, db, ExcelFile):
       db.session.rollback()
       print("Error updating excel file chart data results attribute:", e)
 
+  print(suspicious_charts)
   return suspicious_charts
