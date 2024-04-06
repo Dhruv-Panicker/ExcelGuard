@@ -28,13 +28,21 @@ COMMON_EXCEL_FONTS = {
   "Palatino Linotype"
 }
 
-def check_font_data(font_data, template_data):
-  suspicious_fonts = {}
-  template_fonts = set(template_data["font_data"])
+def check_font_data(font_data, db, template_data, ExcelFile):
+  template_fonts = set()
+  if template_data:
+    template_fonts = set(template_data["font_data"])
   
-  for file, fonts in font_data.items():
+  for file_id, fonts in font_data.items():
     similar_fonts = set(font for font in fonts if font not in COMMON_EXCEL_FONTS and font not in template_fonts)
     font_count = len(similar_fonts)
-    suspicious_fonts[file] = (similar_fonts, font_count)
+    try:
+      excel_file = db.session.query(ExcelFile).filter_by(id=file_id).first()
+      if excel_file:
+        excel_file.font_data_results = (list(similar_fonts), font_count)
+      db.session.commit()
+    except Exception as e:
+      db.session.rollback()
+      print("Error updating excel file font data results attribute:", e)
 
-  return suspicious_fonts
+  return True
