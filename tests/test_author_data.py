@@ -4,6 +4,8 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from datetime import datetime
 from algorithim.author_data import check_author_data
+from unittest.mock import patch
+from main import db, ExcelFile
 
 def test_author_data_no_duplicates():
   author_data = {
@@ -19,7 +21,7 @@ def test_author_data_no_duplicates():
     'lastModifiedBy': datetime(2021, 12, 31)
   }
   expected_result = {}
-  assert check_author_data(author_data, template_author_data) == expected_result
+  assert check_author_data(author_data, db, ExcelFile, template_author_data) == expected_result
 
 def test_author_data_with_duplicates():
   author_data = {
@@ -42,7 +44,7 @@ def test_author_data_with_duplicates():
   expected_result = {
     'file1.xlsx': ['same_creator:userA'],
     'file2.xlsx': ['same_creator:userA']}
-  assert check_author_data(author_data, template_author_data) == expected_result
+  assert check_author_data(author_data, db, ExcelFile, template_author_data) == expected_result
 
 def test_author_data_with_same_creation_date():
   author_data = {
@@ -65,4 +67,4 @@ def test_author_data_with_same_creation_date():
   expected_result = {
     'file1.xlsx': ['same_creation_date:2022-01-01 00:00:00'],
     'file2.xlsx': ['same_creation_date:2022-01-01 00:00:00']}
-  assert check_author_data(author_data, template_author_data) == expected_result
+  assert check_author_data(author_data, db, ExcelFile, template_author_data) == expected_result
