@@ -26,10 +26,10 @@ def check_chart_data(chart_data, db, ExcelFile):
     try:
       excel_file = db.session.query(ExcelFile).filter_by(id=file_id).first()
       if excel_file:
-        excel_file.chart_data_results = (flagged_messages, count_of_flagged_messages)
+        excel_file.chart_data_results = suspicious_charts[file_id]
         db.session.commit()
     except Exception as e:
       db.session.rollback()
       print("Error updating excel file chart data results attribute:", e)
 
-  return True
+  return suspicious_charts
