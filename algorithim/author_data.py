@@ -1,43 +1,32 @@
-import datetime
+from itertools import combinations
+from datetime import datetime
 
-def check_author_data(author_data, template_author_data):
-    suspicious_files  = []
+def check_author_data(author_data, db, ExcelFile, template_author_data):
+  suspicious_files = {}
 
-    template_create_date = template_author_data.get("created", None)
+  template_create_date = None
+  if template_author_data is not None:
+    template_create_date = template_author_data.get("created")
+    template_create_date_str = template_create_date.strftime('%m/%d/%Y') if template_create_date else None
 
-    for filename, authordata in author_data.items(): 
-        
-        file_created_date = authordata.get("created", None)
-        file_last_modified = authordata.get("lastModifiedBy", None)
-        file_creator = authordata.get("creator", None)
+  for file1, file2 in combinations(author_data.items(), 2):
+    file_id1, author_data1 = file1
+    file_id2, author_data2 = file2
 
-        file_last_modified.strftime('%m/%d/%Y')
-        file_created_date.strftime('%m/%d/%Y')
+    if template_create_date is not None: 
+      if author_data1["created"] < template_create_date:
+        suspicious_files.setdefault(file_id1, []).append(f"Created before the template file date {template_create_date_str}")
 
-        #Check if the student file was even made before creation og the template file 
-        if file_created_date < template_create_date: 
-            suspicious_files.add(filename, f"Created before the template file date {template_create_date}")
-            
-        
-        #Loop through comparison of the other files 
-        for comparison_file, comparison_data in author_data.items():
-                if filename != comparison_file: 
-                    comparison_creator = comparison_data.get("creator")
-                    comparison_last_modified = comparison_data.get("lastModifiedBy")
-                    comparison_created_date = comparison_data.get("created")
+    if author_data1["creator"] == author_data2["creator"]:
+      suspicious_files.setdefault(file_id1, []).append(f"same_creator:{author_data1['creator']}")
+      suspicious_files.setdefault(file_id2, []).append(f"same_creator:{author_data2['creator']}")
 
-                    comparison_last_modified.strftime('%m/%d/%Y')
-                    comparison_created_date.strftime('%m/%d/%Y')
+    if author_data1["lastModifiedBy"] == author_data2["lastModifiedBy"]:
+      suspicious_files.setdefault(file_id1, []).append(f"same_last_modified_by:{author_data1['lastModifiedBy']}")
+      suspicious_files.setdefault(file_id2, []).append(f"same_last_modified_by:{author_data2['lastModifiedBy']}")
 
-                    #Check if files have the same creator 
-                    if file_creator == comparison_creator and file_creator != None: 
-                         suspicious_files.append((filename, f"same_creator:{file_creator}"))
-                    #Check if files have the same last modified 
-                    if file_last_modified == comparison_last_modified and file_last_modified != None: 
-                        suspicious_files.append((filename, f"same_last_modified_by:{file_last_modified}"))
-                    #Check if two files were created at the exact same time
-                    if file_created_date == comparison_created_date != None: 
-                        suspicious_files.append((filename, f"same_creation_date:{file_created_date}"))
-                        
+    if author_data1["created"] == author_data2["created"]:
+      suspicious_files.setdefault(file_id1, []).append(f"same_creation_date:{author_data1['created']}")
+      suspicious_files.setdefault(file_id2, []).append(f"same_creation_date:{author_data2['created']}")
 
-    return suspicious_files
+  return suspicious_files
