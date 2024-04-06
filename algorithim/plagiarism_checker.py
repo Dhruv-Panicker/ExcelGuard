@@ -10,11 +10,11 @@ DEFAULT_SERIES_FILE_DATA_SOURCE = "Current Worksheet"
 FORMULA_INSIDE_BRACKETS = r'\(([^)]+)\)'
 FORMULA_INSIDE_SQUARE_BRACKETS = r'\[([^\]]+)\]'
 
-def perform_checks(scan_id, ExcelFile, ExcelChart, TemplateFile):
+def perform_checks(scan_id, db, ExcelFile, ExcelChart, TemplateFile):
   template_data = get_template_file_data(scan_id, TemplateFile)
   # fingerprint_data = get_fingerprint_data(scan_id, ExcelFile)
   # column_width_data = get_column_width_data(scan_id, ExcelFile)
-  # author_data = get_author_data(scan_id, ExcelFile)
+  author_data = get_author_data(scan_id, ExcelFile)
   font_data = get_font_data(scan_id, ExcelFile)
   chart_data = get_chart_data(scan_id, ExcelFile, ExcelChart)
   # formula_data = get_formula_data(scan_id, ExcelFile)
@@ -23,9 +23,9 @@ def perform_checks(scan_id, ExcelFile, ExcelChart, TemplateFile):
   chart_data_scores = 0
   # fingerprint_score = check_fingerprint_data(fingerprint_data)
   # column_width_files = check_column_width(column_width_data, template_data["column_data"] if template_data else [])
-  # author_data_files = check_author_data(author_data, template_data["author_data"] if template_data else [])
-  font_component_score = check_font_data(font_data, template_data)
-  chart_component_score = check_chart_data(chart_data)
+  author_data_files = check_author_data(author_data, db, ExcelFile, template_data["author_data"] if template_data else None)
+  font_component_score = check_font_data(font_data, db, template_data, ExcelFile)
+  chart_component_score = check_chart_data(chart_data, db, ExcelFile)
   # formula_data_score = check_formula_data(formula_data)
 
 
@@ -46,7 +46,7 @@ def get_fingerprint_data(scan_id, ExcelFile):
       }
       formula_data = file.complex_formulas_list 
 
-      fingerprint_data[file.file_name] = {
+      fingerprint_data[file.id] = {
         "author_data": author_data, 
         "formula_data": formula_data, 
       }
@@ -59,12 +59,10 @@ def get_column_width_data(scan_id, ExcelFile):
   column_width_data = {}
 
   for file in files:
-    # Extract file name and unique column width list
-    file_name = file.file_name
     unique_column_width_list = file.unique_column_width_list
     
     # Add the file name and its unique column width list to the column_data dictionary
-    column_width_data[file_name] = unique_column_width_list
+    column_width_data[file.id] = unique_column_width_list
   return column_width_data
 
 def get_author_data(scan_id, ExcelFile):
@@ -72,7 +70,7 @@ def get_author_data(scan_id, ExcelFile):
   author_data = {}
   
   for file in files:
-    author_data[file.file_name] = {
+    author_data[file.id] = {
       "created": file.created,
       "creator": file.creator,
       "modified": file.modified,
@@ -85,7 +83,7 @@ def get_font_data(scan_id, ExcelFile):
   font_data = {}
   
   for file in files:
-    font_data[file.file_name] = file.unique_font_names_list
+    font_data[file.id] = file.unique_font_names_list
   return font_data
 
 def get_chart_data(scan_id, ExcelFile, ExcelChart):
@@ -96,7 +94,7 @@ def get_chart_data(scan_id, ExcelFile, ExcelChart):
     charts = ExcelChart.query.filter_by(excel_file_id=file.id).all()
   
     # Store chart data for the current ExcelFile
-    chart_data[file.file_name] = {}
+    chart_data[file.id] = {}
   
     for chart in charts:
       data_source_str = chart.data_source
@@ -128,7 +126,7 @@ def get_chart_data(scan_id, ExcelFile, ExcelChart):
         "x_source_filename": x_source_filename,
         "y_source_filename": y_source_filename
       }
-      chart_data[file.file_name][chart.chart_name] = chart_info
+      chart_data[file.id][chart.chart_name] = chart_info
   return chart_data
 
 def get_formula_data(scan_id, ExcelFile):
@@ -136,7 +134,7 @@ def get_formula_data(scan_id, ExcelFile):
   formula_data = {}
   
   for file in files:
-    formula_data[file.file_name] = file.complex_formulas_list
+    formula_data[file.id] = file.complex_formulas_list
   return formula_data
 
 # Function that will get all data from the template file from db 
