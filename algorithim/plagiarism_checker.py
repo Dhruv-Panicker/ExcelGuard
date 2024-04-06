@@ -21,10 +21,10 @@ def perform_checks(scan_id, db, ExcelFile, ExcelChart, TemplateFile):
 
   # Calculate scores from each individual check
   chart_data_scores = 0
-  fingerprint_score = check_fingerprint_data(fingerprint_data)
-  column_width_files = check_column_width(column_width_data, template_data["column_data"] if template_data else [])
+  fingerprint_score = check_fingerprint_data(fingerprint_data, db, ExcelFile)
+  column_width_files = check_column_width(column_width_data, db, ExcelFile, template_data["column_data"] if template_data else [])
   author_data_files = check_author_data(author_data, db, ExcelFile, template_data["author_data"] if template_data else None)
-  font_component_score = check_font_data(font_data, db, template_data, ExcelFile)
+  font_component_score = check_font_data(font_data, db, ExcelFile, template_data)
   chart_component_score = check_chart_data(chart_data, db, ExcelFile)
   # formula_data_score = check_formula_data(formula_data)
 

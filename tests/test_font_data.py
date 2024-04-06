@@ -19,7 +19,7 @@ def test_check_font_data_with_unique_uncommon_fonts():
       1: ([], 0),
       2: ([], 0),
       3: ([], 0)}
-    assert check_font_data(font_data, db, template_data, ExcelFile) == expected_result
+    assert check_font_data(font_data, db, ExcelFile, template_data) == expected_result
     assert not mock_db.session.query.called
     assert not mock_db.session.commit.called
     assert not mock_db.session.rollback.called
@@ -38,7 +38,7 @@ def test_check_font_data_with_similar_uncommon_fonts():
       1: (['Agency FB'], 1),
       2: ([], 0),
       3: (['Agency FB'], 1)}
-    assert check_font_data(font_data, db, template_data, ExcelFile) == expected_result
+    assert check_font_data(font_data, db, ExcelFile, template_data) == expected_result
     assert not mock_db.session.query.called
     assert not mock_db.session.commit.called
     assert not mock_db.session.rollback.called
@@ -57,7 +57,7 @@ def test_check_font_data_with_similar_common_fonts():
       1: ([], 0),
       2: ([], 0),
       3: ([], 0)}
-    assert check_font_data(font_data, db, template_data, ExcelFile) == expected_result
+    assert check_font_data(font_data, db, ExcelFile, template_data) == expected_result
     assert not mock_db.session.query.called
     assert not mock_db.session.commit.called
     assert not mock_db.session.rollback.called
@@ -79,7 +79,7 @@ def test_check_font_data_with_similar_uncommon_fonts_in_template_file():
       1: ([], 0),
       2: ([], 0),
       3: ([], 0)}
-    assert check_font_data(font_data, db, template_data, ExcelFile) == expected_result
+    assert check_font_data(font_data, db, ExcelFile, template_data) == expected_result
     assert not mock_db.session.query.called
     assert not mock_db.session.commit.called
     assert not mock_db.session.rollback.called

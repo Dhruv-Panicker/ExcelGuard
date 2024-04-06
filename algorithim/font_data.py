@@ -29,7 +29,7 @@ COMMON_EXCEL_FONTS = {
   "Palatino Linotype"
 }
 
-def check_font_data(font_data, db, template_data, ExcelFile):
+def check_font_data(font_data, db, ExcelFile, template_data):
   suspicious_fonts = {}
   template_fonts = set()
   if template_data:

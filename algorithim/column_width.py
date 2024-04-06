@@ -1,4 +1,4 @@
-def check_column_width(file_column_data, template_column_data):
+def check_column_width(file_column_data, db, ExcelFile, template_column_data):
     suspicious_details = []
     template_column_set = set(template_column_data)
 

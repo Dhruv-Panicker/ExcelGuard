@@ -9,7 +9,7 @@ def generate_fingerprint(author_data, formula_data):
   return fingerprint
 
 
-def check_fingerprint_data(fingerprint_data):
+def check_fingerprint_data(fingerprint_data, db, ExcelFile):
   suspicious_files = []
   fingerprint_to_file = {}
 
