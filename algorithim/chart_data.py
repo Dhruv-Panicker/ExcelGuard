@@ -30,5 +30,4 @@ def check_chart_data(chart_data, db, ExcelFile):
       db.session.rollback()
       print("Error updating excel file chart data results attribute:", e)
 
-  print(suspicious_charts)
   return suspicious_charts
