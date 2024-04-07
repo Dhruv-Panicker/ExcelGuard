@@ -7,5 +7,7 @@ class Formula:
     self.formula = formula_string
 
     # Store formula as tokens
-    self.formula_tokens = re.findall(r'[A-Za-z]+|\d+|\S', formula_string)
+    self.tokenized = re.findall(r'([A-Z]+|[0-9]+(?:\.[0-9]+)?|\(|\)|,|[-+*/^]|[A-Z]+[0-9]+)', formula_string)
 
+  def __str__(self):
+    return f"{self.formula}"

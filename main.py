@@ -20,6 +20,8 @@ from typing import List
 import pythoncom
 # Since this is needed to extract data on charts, the application MUST be running on Windows
 import win32com.client as client
+
+from algorithim.formula_data import *
 from classes.formula import Formula
 from algorithim.plagiarism_checker import perform_checks
 
@@ -211,7 +213,6 @@ def begin_scan():
         font_data[file.filename] = extract_font_data(file)
         formula_data[file.filename] = extract_formula_data(file)
         chart_data[file.filename] = extract_chart_data(file)
-        print(formula_data[file.filename])
 
         # Create a new excel_file record and get it's id
         excel_file_id = create_excel_file_record(file, new_scan.id, author_data[file.filename], font_data[file.filename], column_data[file.filename], formula_data[file.filename])
@@ -221,6 +222,8 @@ def begin_scan():
 
       except Exception as e:
         return f"Error  the file: {str(e)}"
+
+
 
   return redirect(url_for(".scan_results", scan_id=new_scan.id))
 
@@ -420,7 +423,7 @@ def extract_formula_data(excel_file):
                   if len(cell.value) > 7:
 
                     # Using class.formula.Formula class to store the complex Formulas
-                    complex_formula_data[cell_position] = Formula(cell.value)
+                    complex_formula_data[cell_position] = cell.value
 
                 # Catch any non-string formulas and print to console what they are
                 else:
@@ -429,10 +432,7 @@ def extract_formula_data(excel_file):
   except Exception as e:
     print(f"Error reading {file_formula_data}: {str(e)}")
 
-  # TESTING: see that the correct formulas are being stored in complex formula dictionary
-  print(f"Complex Formulas: {complex_formula_data}")
-
-  return file_formula_data
+  return complex_formula_data
 
 def series_output(chart):
   chart_data = {

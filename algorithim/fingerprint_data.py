@@ -27,3 +27,5 @@ def check_fingerprint_data(fingerprint_data, db, ExcelFile):
       # Otherwise add that unique fingerprint and associated file_id to the dictionary 
       fingerprint_to_file[fingerprint] = file_id
   return suspicious_files
+
+
