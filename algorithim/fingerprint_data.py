@@ -10,7 +10,7 @@ def generate_fingerprint(author_data, formula_data):
 
 
 def check_fingerprint_data(fingerprint_data, db, ExcelFile):
-  suspicious_files = []
+  suspicious_files = {}
   fingerprint_to_file = {}
 
   # Iterarate through all the files  
@@ -21,8 +21,13 @@ def check_fingerprint_data(fingerprint_data, db, ExcelFile):
     if fingerprint in fingerprint_to_file: 
       # Flag the current file and the file to which it was matched with into the set 
       matched_file = fingerprint_to_file[fingerprint]
-      suspicious_files.append((file_id, f"matched_fingerprint_with:{matched_file}"))
-      suspicious_files.append((matched_file, f"matched_fingerprint_with:{file_id}"))
+      
+      if file_id not in fingerprint_to_file: 
+        suspicious_files[file_id] = (f"matched_fingerprint_with:{matched_file}", 3)
+
+      if matched_file not in suspicious_files: 
+        suspicious_files[matched_file] = (f"matched_fingerprint_with:{file_id}", 3)
+        
     else: 
       # Otherwise add that unique fingerprint and associated file_id to the dictionary 
       fingerprint_to_file[fingerprint] = file_id
