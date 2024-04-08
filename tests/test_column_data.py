@@ -25,8 +25,8 @@ def test_column_width_with_match():
         file_column_data = {'file1.xlsx': [10, 20, 30], 'file2.xlsx': [10, 20, 30]}
         template_column_data = [15, 25, 35]
         expected_result = {
-            'file1.xlsx': ([10, 20, 30], 3),
-            'file2.xlsx': ([10, 20, 30], 3)
+            'file1.xlsx': ("column_width", [10, 20, 30], 3),
+            'file2.xlsx': ("column_width", [10, 20, 30], 3)
         }
         assert check_column_width(file_column_data, db, ExcelFile, template_column_data) == expected_result
         assert not mock_db.session.query.called
@@ -41,8 +41,8 @@ def test_column_width_with_partial_match():
         file_column_data = {'file1.xlsx': [10, 20, 35], 'file2.xlsx': [12, 20, 35]}
         template_column_data = [10, 20, 30]
         expected_result = {
-            'file1.xlsx': ([35], 1),
-            'file2.xlsx': ([35], 1)
+            'file1.xlsx': ("column_width", [35], 1),
+            'file2.xlsx': ("column_width", [35], 1)
         }
         assert check_column_width(file_column_data, db, ExcelFile, template_column_data) == expected_result
         assert not mock_db.session.query.called

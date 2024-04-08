@@ -16,9 +16,9 @@ def test_check_font_data_with_unique_uncommon_fonts():
       3: ['Chalkduster', 'Lucida Calligraphy']}
     template_data = None
     expected_result = {
-      1: ([], 0),
-      2: ([], 0),
-      3: ([], 0)}
+      1: ("font_data", [], 0),
+      2: ("font_data", [], 0),
+      3: ("font_data", [], 0)}
     assert check_font_data(font_data, db, ExcelFile, template_data) == expected_result
     assert not mock_db.session.query.called
     assert not mock_db.session.commit.called
@@ -35,9 +35,9 @@ def test_check_font_data_with_similar_uncommon_fonts():
       3: ['Chalkduster', 'Agency FB']}
     template_data = None
     expected_result = {
-      1: (['Agency FB'], 1),
-      2: ([], 0),
-      3: (['Agency FB'], 1)}
+      1: ("font_data", ['Agency FB'], 1),
+      2: ("font_data", [], 0),
+      3: ("font_data", ['Agency FB'], 1)}
     assert check_font_data(font_data, db, ExcelFile, template_data) == expected_result
     assert not mock_db.session.query.called
     assert not mock_db.session.commit.called
@@ -54,9 +54,9 @@ def test_check_font_data_with_similar_common_fonts():
       3: ['Palatino Linotype', 'Calibri Light']}
     template_data = None
     expected_result = {
-      1: ([], 0),
-      2: ([], 0),
-      3: ([], 0)}
+      1: ("font_data", [], 0),
+      2: ("font_data", [], 0),
+      3: ("font_data", [], 0)}
     assert check_font_data(font_data, db, ExcelFile, template_data) == expected_result
     assert not mock_db.session.query.called
     assert not mock_db.session.commit.called

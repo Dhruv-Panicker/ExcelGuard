@@ -23,9 +23,9 @@ def check_column_width(file_column_data, db, ExcelFile, template_column_data):
         if (filename, column_set) not in seen:
             # Convert tuple back to list for output
             if len(column_set) >= 3: 
-                suspicious_files[filename] = (list(column_set), 3)
+                suspicious_files[filename] = ("column_width", list(column_set), 3)
             else: 
-                suspicious_files[filename] = (list(column_set), 1)
+                suspicious_files[filename] = ("column_width", list(column_set), 1)
             seen.add((filename, column_set))
 
     return suspicious_files

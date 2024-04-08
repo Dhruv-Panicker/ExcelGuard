@@ -23,10 +23,10 @@ def check_fingerprint_data(fingerprint_data, db, ExcelFile):
       matched_file = fingerprint_to_file[fingerprint]
       
       if file_id not in fingerprint_to_file: 
-        suspicious_files[file_id] = (f"matched_fingerprint_with:{matched_file}", 3)
+        suspicious_files[file_id] = ("fingerprint", f"matched_fingerprint_with:{matched_file}", 3)
 
       if matched_file not in suspicious_files: 
-        suspicious_files[matched_file] = (f"matched_fingerprint_with:{file_id}", 3)
+        suspicious_files[matched_file] = ("fingerprint", f"matched_fingerprint_with:{file_id}", 3)
         
     else: 
       # Otherwise add that unique fingerprint and associated file_id to the dictionary 

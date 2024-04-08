@@ -17,7 +17,7 @@ def perform_checks(scan_id, db, ExcelFile, ExcelChart, TemplateFile):
   author_data = get_author_data(scan_id, ExcelFile)
   font_data = get_font_data(scan_id, ExcelFile)
   chart_data = get_chart_data(scan_id, ExcelFile, ExcelChart)
-  # formula_data = get_formula_data(scan_id, ExcelFile)
+  formula_data = get_formula_data(scan_id, ExcelFile)
 
   # Calculate scores from each individual check
   chart_data_scores = 0
@@ -26,15 +26,45 @@ def perform_checks(scan_id, db, ExcelFile, ExcelChart, TemplateFile):
   author_data_files = check_author_data(author_data, db, ExcelFile, template_data["author_data"] if template_data else None)
   font_component_score = check_font_data(font_data, db, ExcelFile, template_data)
   chart_component_score = check_chart_data(chart_data, db, ExcelFile)
-  # formula_data_score = check_formula_data(formula_data)
+  formula_data_score = check_formula_data(formula_data)
+
+  #Combine scores from all components 
+  all_scores = {}
+  for scores_dict in [fingerprint_score, column_width_files, author_data_files, font_component_score, chart_component_score, formula_data_score]:
+    for key, value in scores_dict.items():
+      if key in all_scores:  
+        all_scores[key].extend(value)
+      else:
+        all_scores[key] = value
+
+  #Weights of each component on a scale of 1-10 
+  weights = {
+    "fingerprint": 3,
+    "column_width": 2,
+    "author_data": 2,
+    "shape_data": 2,
+    "font_data": 1,
+    "chart_data": 3,
+    "formula_data": 2
+  }
+  final_scores = {}
+
+  # Aggregating scores from all components
+  for file, components in all_scores.items():
+    #If file not in the final dict 
+    if file not in final_scores:
+      final_scores[file] = {"reasons": [], "score": 0}
+    #Go through each files reasons it was flagged, and then the score from that compoennt to calculate file total plagiarism score
+    for detail in components:
+      component_type, reason, score = detail  
+      final_scores[file]["reasons"].append(reason)
+      final_scores[file]["score"] += score * weights[component_type]
+  # Rank files based on the total score
+  ranked_files = sorted(final_scores.items(), key=lambda x: x[1]['score'], reverse=True)
+  ranked_files_dict = {file: details for file, details in ranked_files}
 
 
-  # Aggregate the scores.
-  # total_score = (column_width_score + author_data_score +
-  #               + font_data_score + formula_data_score) / 7  # Example averaging 
-
-  # Return the total score
-  return chart_component_score
+  return ranked_files_dict
 
 def get_fingerprint_data(scan_id, ExcelFile):
     files = ExcelFile.query.filter_by(scan_id=scan_id).all()

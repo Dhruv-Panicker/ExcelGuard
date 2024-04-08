@@ -42,7 +42,7 @@ def check_font_data(font_data, db, ExcelFile, template_data):
   for file_id, fonts in font_data.items():
     similar_fonts = [font for font in set(fonts) if font in duplicate_uncommon_fonts]
     font_count = len(similar_fonts)
-    suspicious_fonts[file_id] = (similar_fonts, font_count)
+    suspicious_fonts[file_id] = ("font_data", similar_fonts, font_count)
     try:
       excel_file = db.session.query(ExcelFile).filter_by(id=file_id).first()
       if excel_file:

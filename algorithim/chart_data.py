@@ -19,7 +19,7 @@ def check_chart_data(chart_data, db, ExcelFile):
         flagged_messages.append(f"Chart '{chart_name}' has a matching y source filename with file '{y_source_filename}'.")
     
     count_of_flagged_messages = len(flagged_messages)
-    suspicious_charts[file_id] = (flagged_messages, count_of_flagged_messages)
+    suspicious_charts[file_id] = ("chart_data", flagged_messages, count_of_flagged_messages)
     
     try:
       excel_file = db.session.query(ExcelFile).filter_by(id=file_id).first()
