@@ -1,5 +1,4 @@
 from itertools import combinations
-from datetime import datetime
 
 def check_author_data(author_data, db, ExcelFile, template_author_data):
   suspicious_files = {}
@@ -31,4 +30,17 @@ def check_author_data(author_data, db, ExcelFile, template_author_data):
       suspicious_files.setdefault(file_id1, []).append(("author_data", f"same_creation_date:{auth1_str}", 2))
       suspicious_files.setdefault(file_id2, []).append(("author_data", f"same_creation_date:{auth2_str}", 2))
       
+    try:
+      excel_file1 = db.session.query(ExcelFile).filter_by(id=file_id1).first()
+      excel_file2 = db.session.query(ExcelFile).filter_by(id=file_id2).first()
+      if excel_file1:
+        excel_file1.author_data_results = suspicious_files[file_id1]
+        db.session.commit()
+      if excel_file2:
+        excel_file2.author_data_results = suspicious_files[file_id2]
+        db.session.commit()
+    except Exception as e:
+      db.session.rollback()
+      print("Error updating excel file author data results attribute:", e)
+
   return suspicious_files
