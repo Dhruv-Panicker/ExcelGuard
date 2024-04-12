@@ -1,31 +1,36 @@
+from itertools import combinations
+
 def check_column_width_data(file_column_data, db, ExcelFile, template_column_data):
-    suspicious_details = []
-    template_column_set = set(template_column_data)
+  suspicious_files = {}
+  template_column_set = set(template_column_data)
 
-    # Iterate through each pair of files
-    for filename1, columns1 in file_column_data.items():
-        for filename2, columns2 in file_column_data.items():
-            if filename1 == filename2:
-                continue  # Skip comparing the file with itself
+  # Generate combinations of file names
+  file_combinations = combinations(file_column_data.keys(), 2)
 
-            # Find common columns between the two files that are not in the template
-            common_unique_columns = set(columns1).intersection(columns2) - template_column_set
+  for file_id1, file_id2 in file_combinations:
+    columns1 = file_column_data[file_id1]
+    columns2 = file_column_data[file_id2]
 
-            if common_unique_columns:
-                # If there are common columns not in the template, flag both files
-                suspicious_details.append((filename1, tuple(common_unique_columns)))
-                suspicious_details.append((filename2, tuple(common_unique_columns)))
+    common_unique_columns = set(columns1).intersection(columns2) - template_column_set
 
-    # Remove duplicates while preserving order
-    seen = set()
-    suspicious_files = {}
-    for filename, column_set in suspicious_details:
-        if (filename, column_set) not in seen:
-            # Convert tuple back to list for output
-            if len(column_set) >= 3: 
-                suspicious_files[filename] = ("column_width", list(column_set), 3)
-            else: 
-                suspicious_files[filename] = ("column_width", list(column_set), 1)
-            seen.add((filename, column_set))
+    if common_unique_columns:
+      # If there are common columns not in the template, flag both files
+      for file_id in (file_id1, file_id2):
+        if file_id not in suspicious_files:
+          suspicious_files[file_id] = ("column_width", [], 0)
+        suspicious_files[file_id][1].extend(common_unique_columns)
+        # Convert tuple to list for modification
+        suspicious_files[file_id] = list(suspicious_files[file_id])
+        suspicious_files[file_id][2] = min(len(common_unique_columns), 3)
+        # Convert back to tuple
+        suspicious_files[file_id] = tuple(suspicious_files[file_id])
+        try:
+          excel_file = db.session.query(ExcelFile).filter_by(id=file_id).first()
+          if excel_file:
+            excel_file.column_data_results = suspicious_files[file_id]
+            db.session.commit()
+        except Exception as e:
+          db.session.rollback()
+          print("Error updating excel file column width data results attribute:", e)
 
-    return suspicious_files
+  return suspicious_files
