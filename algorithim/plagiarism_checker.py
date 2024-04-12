@@ -22,22 +22,23 @@ def perform_checks(scan_id, db, ExcelFile, ExcelChart, TemplateFile):
   # Calculate scores from each individual check
   chart_data_scores = 0
   fingerprint_score = check_fingerprint_data(fingerprint_data, db, ExcelFile)
-  column_width_files = check_column_width_data(column_width_data, db, ExcelFile, template_data["column_data"] if template_data else [])
-  author_data_files = check_author_data(author_data, db, ExcelFile, template_data["author_data"] if template_data else None)
+  column_width_score = check_column_width_data(column_width_data, db, ExcelFile, template_data["column_data"] if template_data else [])
+  author_data_score = check_author_data(author_data, db, ExcelFile, template_data["author_data"] if template_data else None)
   font_component_score = check_font_data(font_data, db, ExcelFile, template_data)
   chart_component_score = check_chart_data(chart_data, db, ExcelFile)
   formula_data_score = check_formula_data(formula_data)
 
-  #Combine scores from all components 
+  # Combine scores from all components 
   all_scores = {}
-  for scores_dict in [fingerprint_score, column_width_files, author_data_files, font_component_score, chart_component_score, formula_data_score]:
-    for key, value in scores_dict.items():
-      if key in all_scores:  
-        all_scores[key].extend(value)
-      else:
-        all_scores[key] = value
+  for scores_dict in [fingerprint_score, column_width_score, author_data_score, font_component_score, chart_component_score, formula_data_score]:
+    if scores_dict is not None:
+      for key, value in scores_dict.items():
+        if key in all_scores:  
+          all_scores[key].append(value)
+        else:
+          all_scores[key] = [value]
 
-  #Weights of each component on a scale of 1-10 
+  # Weights of each component on a scale of 1-10 
   weights = {
     "fingerprint": 3,
     "column_width": 2,
@@ -49,20 +50,19 @@ def perform_checks(scan_id, db, ExcelFile, ExcelChart, TemplateFile):
   }
   final_scores = {}
 
-  # Aggregating scores from all components
   for file, components in all_scores.items():
-    #If file not in the final dict 
+    # If file not in the final dict
     if file not in final_scores:
       final_scores[file] = {"reasons": [], "score": 0}
-    #Go through each files reasons it was flagged, and then the score from that compoennt to calculate file total plagiarism score
+    # Go through each file's reasons it was flagged, and then the score from that component to calculate the file's total plagiarism score
     for detail in components:
-      component_type, reason, score = detail  
-      final_scores[file]["reasons"].append(reason)
-      final_scores[file]["score"] += score * weights[component_type]
+      if len(detail) == 3:  # Ensure the tuple has three elements
+        component_type, reason, score = detail
+        final_scores[file]["reasons"].append(reason)
+        final_scores[file]["score"] += score * weights[component_type]
   # Rank files based on the total score
   ranked_files = sorted(final_scores.items(), key=lambda x: x[1]['score'], reverse=True)
   ranked_files_dict = {file: details for file, details in ranked_files}
-
 
   return ranked_files_dict
 
