@@ -3,7 +3,7 @@ import os
 # Add the project root directory to the sys.path list
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from algorithim.column_width import check_column_width
+from algorithim.column_width_data import check_column_width_data
 from unittest.mock import patch
 from main import db, ExcelFile
 
@@ -13,7 +13,7 @@ def test_column_width_no_match():
       file_column_data = {'file1.xlsx': [10, 20, 30]}
       template_column_data = [10, 20, 30]
       expected_result = {}
-      assert check_column_width(file_column_data, db, ExcelFile, template_column_data) == expected_result
+      assert check_column_width_data(file_column_data, db, ExcelFile, template_column_data) == expected_result
       assert not mock_db.session.query.called
       assert not mock_db.session.commit.called
       assert not mock_db.session.rollback.called
@@ -28,7 +28,7 @@ def test_column_width_with_match():
             'file1.xlsx': ("column_width", [10, 20, 30], 3),
             'file2.xlsx': ("column_width", [10, 20, 30], 3)
         }
-        assert check_column_width(file_column_data, db, ExcelFile, template_column_data) == expected_result
+        assert check_column_width_data(file_column_data, db, ExcelFile, template_column_data) == expected_result
         assert not mock_db.session.query.called
         assert not mock_db.session.commit.called
         assert not mock_db.session.rollback.called
@@ -44,7 +44,7 @@ def test_column_width_with_partial_match():
             'file1.xlsx': ("column_width", [35], 1),
             'file2.xlsx': ("column_width", [35], 1)
         }
-        assert check_column_width(file_column_data, db, ExcelFile, template_column_data) == expected_result
+        assert check_column_width_data(file_column_data, db, ExcelFile, template_column_data) == expected_result
         assert not mock_db.session.query.called
         assert not mock_db.session.commit.called
         assert not mock_db.session.rollback.called
