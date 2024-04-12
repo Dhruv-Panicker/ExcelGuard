@@ -9,18 +9,18 @@ from main import db, ExcelFile
 
 
 def test_author_data_no_duplicates():
-   with patch('test_author_data.db.session') as mock_db, \
+  with patch('test_author_data.db.session') as mock_db, \
     patch('test_author_data.ExcelFile') as mock_ExcelFile:
     author_data = {
-        'file1.xlsx': {
-            'creator': 'userA', 
-            'created': datetime(2022, 1, 1),
-            'lastModifiedBy': datetime(2022, 1, 2)
-        }
+      'file1.xlsx': {
+        'creator': 'userA', 
+        'created': datetime(2022, 1, 1),
+        'lastModifiedBy': datetime(2022, 1, 2)
+      }
     }
     template_author_data = {
-        'creator': 'professor', 
-        'created': datetime(2021, 12, 31)
+      'creator': 'professor', 
+      'created': datetime(2021, 12, 31)
     }
     expected_result = {}
     assert check_author_data(author_data, db, ExcelFile, template_author_data) == expected_result
@@ -33,24 +33,24 @@ def test_author_data_with_duplicates():
   with patch('test_author_data.db.session') as mock_db, \
     patch('test_author_data.ExcelFile') as mock_ExcelFile:
     author_data = {
-        'file1.xlsx': {
-            'creator': 'userA', 
-            'created': datetime(2022, 1, 1),
-            'lastModifiedBy': datetime(2022, 1, 2)
-        },
-        'file2.xlsx': {
-            'creator': 'userA', 
-            'created': datetime(2022, 1, 3),
-            'lastModifiedBy': datetime(2022, 1, 4)
-        }
+      'file1.xlsx': {
+        'creator': 'userA', 
+        'created': datetime(2022, 1, 1),
+        'lastModifiedBy': datetime(2022, 1, 2)
+      },
+      'file2.xlsx': {
+        'creator': 'userA', 
+        'created': datetime(2022, 1, 3),
+        'lastModifiedBy': datetime(2022, 1, 4)
+      }
     }
     template_author_data = {
-        'creator': 'professor', 
-        'created': datetime(2021, 12, 31)
+      'creator': 'professor', 
+      'created': datetime(2021, 12, 31)
     }
     expected_result = {
-        'file1.xlsx': [("author_data", 'same_creator:userA', 3)],
-        'file2.xlsx': [("author_data", 'same_creator:userA', 3)]
+      'file1.xlsx': [("author_data", 'same_creator:userA', 3)],
+      'file2.xlsx': [("author_data", 'same_creator:userA', 3)]
     }
     assert check_author_data(author_data, db, ExcelFile, template_author_data) == expected_result
     assert not mock_db.session.query.called
@@ -63,24 +63,24 @@ def test_author_data_with_same_creation_date():
   with patch('test_author_data.db.session') as mock_db, \
     patch('test_author_data.ExcelFile') as mock_ExcelFile:
     author_data = {
-        'file1.xlsx': {
-            'creator': 'userA', 
-            'created': datetime(2022, 1, 1),
-            'lastModifiedBy': datetime(2022, 1, 2)
-        },
-        'file2.xlsx': {
-            'creator': 'userB', 
-            'created': datetime(2022, 1, 1),
-            'lastModifiedBy': datetime(2022, 1, 3)
-        }
+      'file1.xlsx': {
+        'creator': 'userA', 
+        'created': datetime(2022, 1, 1),
+        'lastModifiedBy': datetime(2022, 1, 2)
+      },
+      'file2.xlsx': {
+        'creator': 'userB', 
+        'created': datetime(2022, 1, 1),
+        'lastModifiedBy': datetime(2022, 1, 3)
+      }
     }
     template_author_data = {
-        'creator': 'professor', 
-        'created': datetime(2021, 12, 31)
+      'creator': 'professor', 
+      'created': datetime(2021, 12, 31)
     }
     expected_result = {
-        'file1.xlsx': [("author_data", 'same_creation_date:01/01/2022', 2)],
-        'file2.xlsx': [("author_data", 'same_creation_date:01/01/2022', 2)]
+      'file1.xlsx': [("author_data", 'same_creation_date:01/01/2022', 2)],
+      'file2.xlsx': [("author_data", 'same_creation_date:01/01/2022', 2)]
     }
     assert check_author_data(author_data, db, ExcelFile, template_author_data) == expected_result
     assert not mock_db.session.query.called
