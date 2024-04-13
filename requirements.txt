@@ -7,3 +7,4 @@ Flask-SQLAlchemy
 Flask-WTF
 openpyxl
 psycopg2-binary
+pywin32
