@@ -1,14 +1,17 @@
-# excel-plagiarism-tool
-## Piranavan's way to set up project locally:
-1. Clone Repository onto your device
-2. Open up Command Line Terminal
-3. "cd" into the path containing the repo you cloned
-4. Run "python -m venv venv" (you will need to have the latest version of Python downloaded)
-5. Run "activate"
-6. Run “python -m pip install -r requirements.txt”
-7. Run “set FLASK_APP=main”
-8. Run “set FLASK_ENVIRONMENT=development”
-9. Run “set FLASK_DEBUG=1”
-10. Run "code ." (this will open up the repository in the coding IDE you chose)
-11. Run "flask run"
-12. Visit the URL specified in your terminal after running the command above
+# ExcelGuard
+## How to set up application locally:
+1. Download Anaconda Navigator (https://docs.anaconda.com/free/anaconda/install/windows/)
+2. Set up a Python environment on Anaconda (only need to do this once)
+    - Click the Environments tab
+    - Click `Create`
+    - Enter a name for your environment
+    - Click the `Python` checkbox
+    - Make sure 3.11.4 is selected
+3. Click on your Python environment
+4. Click the `Play` button that pops up and click `Open with Terminal` in the menu that pops up.
+5. **Optional**: you can use `cd directory_name` (where `directory_name` is the name of the folder), if you have a specific folder you want to store the project in.
+6. Run `git clone https://github.com/Dhruv-Panicker/excel-plagiarism-tool.git`
+7. Run `cd excel-plagiarism-tool`
+8. Run `env.bat`
+9. Run `setup.bat`
+10. Visit the URL specified in your terminal after running the command above
