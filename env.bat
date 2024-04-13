@@ -2,4 +2,7 @@
 
 REM Create and activate virtual environment
 python -m venv venv
-venv\Scripts\activate
+echo Python environment created.
+
+call venv\Scripts\activate
+echo Python environment activated.
