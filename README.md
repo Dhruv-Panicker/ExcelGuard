@@ -15,3 +15,4 @@
 8. Run `env.bat`
 9. Run `setup.bat`
 10. Visit the URL specified in your terminal after running the command above
+<img width="656" alt="download" src="https://github.com/Dhruv-Panicker/excel-plagiarism-tool/assets/57971751/dfafb0cd-bc75-4e44-a11d-abb91cdedc34">
