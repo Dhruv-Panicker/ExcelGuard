@@ -18,11 +18,12 @@ Furthermore, our application enhances the overall learning experience by promoti
 3. Click on your Python environment
 4. Click the `Play` button that pops up and click `Open with Terminal` in the menu that pops up.
 5. **Optional**: you can use `cd directory_name` (where `directory_name` is the name of the folder), if you have a specific folder you want to store the project in.
-6. Run `git clone https://github.com/Dhruv-Panicker/excel-plagiarism-tool.git`
-7. Run `cd excel-plagiarism-tool`
-8. Run `env.bat`
-9. Run `setup.bat`
-10. Visit the URL specified in your terminal after running the command above
+6. After opening the terminal for the Python environment using Anaconda, ensure that `git` is installed by running the following command in the terminal: `conda install -c anaconda git`.
+7. Run `git clone https://github.com/Dhruv-Panicker/excel-plagiarism-tool.git`
+8. Run `cd excel-plagiarism-tool`
+9. Run `env.bat`
+10. Run `setup.bat`
+11. Visit the URL specified in your terminal after running the command above
 <img width="656" alt="download" src="https://github.com/Dhruv-Panicker/excel-plagiarism-tool/assets/57971751/dfafb0cd-bc75-4e44-a11d-abb91cdedc34">
 
 ## Acknowledgments
