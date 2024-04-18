@@ -49,8 +49,8 @@ def test_author_data_with_duplicates():
       'created': datetime(2021, 12, 31)
     }
     expected_result = {
-      'file1.xlsx': [("author_data", 'same_creator:userA', 3)],
-      'file2.xlsx': [("author_data", 'same_creator:userA', 3)]
+      'file1.xlsx': [("author_data", 'Same creator:userA as file2.xlsx', 3)],
+      'file2.xlsx': [("author_data", 'Same creator:userA as file1.xlsx', 3)]
     }
     assert check_author_data(author_data, db, ExcelFile, template_author_data) == expected_result
     assert not mock_db.session.query.called
@@ -79,8 +79,8 @@ def test_author_data_with_same_creation_date():
       'created': datetime(2021, 12, 31)
     }
     expected_result = {
-      'file1.xlsx': [("author_data", 'same_creation_date:01/01/2022', 2)],
-      'file2.xlsx': [("author_data", 'same_creation_date:01/01/2022', 2)]
+      'file1.xlsx': [("author_data", 'Same creation date:01/01/2022 as file2.xlsx', 2)],
+      'file2.xlsx': [("author_data", 'Same creation date:01/01/2022 as file1.xlsx', 2)]
     }
     assert check_author_data(author_data, db, ExcelFile, template_author_data) == expected_result
     assert not mock_db.session.query.called
