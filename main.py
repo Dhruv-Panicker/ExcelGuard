@@ -172,6 +172,11 @@ def register():
 
   return render_template("register.html", form=form)
 
+@app.route('/')
+def index():
+  # Redirect to the '/scan_list' route
+  return redirect(url_for('scan_list'))
+
 @app.route("/scan_list")
 @login_required
 def scan_list(): 
