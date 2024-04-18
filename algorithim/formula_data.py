@@ -1,6 +1,4 @@
 import re
-import time
-
 from collections import defaultdict
 
 
@@ -20,8 +18,6 @@ def find_matching_token_lists(dict1, dict2):
 
 def tokenize_strings(dictionary):
 
-    #print(type(dictionary))
-
     tokenized_dict = defaultdict(list)
 
     for key in dictionary:
@@ -39,7 +35,6 @@ def tokenize_formula(formula_data):
 
 def check_formula_data(formula_data, db, ExcelFile):
 
-    start_time = time.time()
     suspicious_formulas = {}
     tokenized_formulas = {}
     tokenized_comp_formulas = {}
@@ -48,29 +43,23 @@ def check_formula_data(formula_data, db, ExcelFile):
 
         # Flagged messages list for each file
         flagged_messages = []
-        #print(f"file_id = {file_id}")
-        #print(f"formula = {formulas}")
 
         # Tokenize each formula associated with each file
         tokenized_formulas = tokenize_strings(formulas)
-        #print(f"tokenized_formulas = {tokenized_formulas}")
 
         # Compare with each other file in the associated scan
         for file_id_comp, formulas_comp in formula_data.items():
 
             # Compare with each other file (not itself)
             if file_id != file_id_comp:
-                #print(f"file_id = {file_id}")
-                #print(f"file_id_comp = {file_id_comp}")
 
                 # Tokenize comparison file's formulas
                 tokenized_comp_formulas = tokenize_strings(formulas_comp)
-                #print(f"tokenized_formulas to compare with: {tokenized_comp_formulas}")
 
                 # Check for matches between the two files
                 matching_tokens = find_matching_token_lists(tokenized_formulas, tokenized_comp_formulas)
 
-                #print(f"Matching formulas found in {file_id}: {matching_tokens}")
+                print(f"Matching formulas found in {file_id}: {matching_tokens}")
 
                 # If matches exists
                 if matching_tokens:
@@ -90,8 +79,6 @@ def check_formula_data(formula_data, db, ExcelFile):
         except Exception as e:
             db.session.rollback()
             print("Error updating excel file formula data results attribute:", e)
-
-    end_time = time.time()
 
     return suspicious_formulas
 
