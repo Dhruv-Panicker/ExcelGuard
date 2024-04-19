@@ -281,7 +281,8 @@ def file_details():
   charts = file.children
   perform_checks(file.scan_id, db, ExcelFile, ExcelChart, TemplateFile)
   suspicious_charts = file.chart_data_results
-  return render_template("file_details.html", file=file, file_name=file_name, charts=charts, suspicious_charts=suspicious_charts)
+  suspicious_formulas = file.formula_data_results
+  return render_template("file_details.html", file=file, file_name=file_name, charts=charts, suspicious_charts=suspicious_charts, suspicious_formulas=suspicious_formulas)
 
 @app.route("/view_scan")
 @login_required
