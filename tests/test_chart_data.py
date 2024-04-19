@@ -15,9 +15,9 @@ def test_check_chart_data_with_no_charts():
       3: {}
     }
     expected_result = {
-      1: ([], 0),
-      2: ([], 0),
-      3: ([], 0)
+      1: ("chart_data", [], 0),
+      2: ("chart_data", [], 0),
+      3: ("chart_data", [], 0)
     }
     assert check_chart_data(chart_data, db, ExcelFile) == expected_result
     assert not mock_db.session.query.called
@@ -35,9 +35,9 @@ def test_check_chart_data_with_no_cross_referencing_charts():
       3: {'File3 Chart1': {'file_name': 'file3.xlsx', 'chart_name': 'File3 Chart1', 'chart_type': '4', 'data_x_source': "'Problem 1'!$F$17:$G$36", 'data_y_source': "'Problem 3'!$H$17:$I$36", 'x_source_filename': 'Current Worksheet', 'y_source_filename': 'Current Worksheet'}}
     }
     expected_result = {
-      1: ([], 0),
-      2: ([], 0),
-      3: ([], 0)
+      1: ("chart_data", [], 0),
+      2: ("chart_data", [], 0),
+      3: ("chart_data", [], 0)
     }
     assert check_chart_data(chart_data, db, ExcelFile) == expected_result
     assert not mock_db.session.query.called
@@ -55,9 +55,9 @@ def test_check_chart_data_with_cross_referencing_charts():
       3: {'File3 Chart1': {'file_name': 'file3.xlsx', 'chart_name': 'File3 Chart1', 'chart_type': '4', 'data_x_source': "'[file2.xlsx]Problem 1'!$F$17:$G$36", 'data_y_source': "'Problem 3'!$H$17:$I$36", 'x_source_filename': 'file2.xlsx', 'y_source_filename': 'Current Worksheet'}}
     }
     expected_result = {
-      1: (["Chart 'File1 Chart1' has a matching x source filename with file 'file2.xlsx'.", "Chart 'File1 Chart1' has a matching y source filename with file 'file2.xlsx'."], 2),
-      2: ([], 0),
-      3: (["Chart 'File3 Chart1' has a matching x source filename with file 'file2.xlsx'."], 1)
+      1: ("chart_data", ["Chart 'File1 Chart1' has a matching x source filename with file 'file2.xlsx'.", "Chart 'File1 Chart1' has a matching y source filename with file 'file2.xlsx'."], 2),
+      2: ("chart_data", [], 0),
+      3: ("chart_data", ["Chart 'File3 Chart1' has a matching x source filename with file 'file2.xlsx'."], 1)
     }
     assert check_chart_data(chart_data, db, ExcelFile) == expected_result
     assert not mock_db.session.query.called

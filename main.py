@@ -224,6 +224,9 @@ def begin_scan():
 
         # Create new excel_chart records for the corresponding excel_file
         create_excel_chart_record(chart_data[file.filename], excel_file_id)
+        
+        # Perform plagiarism checks on files in scan list
+        perform_checks(new_scan.id, db, ExcelFile, ExcelChart, TemplateFile)
 
       except Exception as e:
         return f"Error  the file: {str(e)}"
@@ -279,10 +282,13 @@ def file_details():
   file = ExcelFile.query.get(file_id)
   file_name = file.file_name
   charts = file.children
-  perform_checks(file.scan_id, db, ExcelFile, ExcelChart, TemplateFile)
   suspicious_charts = file.chart_data_results
+  suspicious_fonts = file.font_data_results
+  suspicious_author_data = file.author_data_results
+  suspicious_fingerprint_data = file.fingerprint_results
+  suspicious_column_widths = file.column_data_results
   suspicious_formulas = file.formula_data_results
-  return render_template("file_details.html", file=file, file_name=file_name, charts=charts, suspicious_charts=suspicious_charts, suspicious_formulas=suspicious_formulas)
+  return render_template("file_details.html", file=file, file_name=file_name, charts=charts, suspicious_charts=suspicious_charts, suspicious_fonts=suspicious_fonts, suspicious_author_data=suspicious_author_data, suspicious_fingerprint_data=suspicious_fingerprint_data, suspicious_column_widths=suspicious_column_widths, suspicious_formulas=suspicious_formulas)
 
 @app.route("/view_scan")
 @login_required
@@ -424,14 +430,10 @@ def extract_formula_data(excel_file):
 
                 # Filter string-formulas (BUG: DataTableFormulas throw SQL insertion errors)
                 if isinstance(cell.value, str):
-                  #file_formula_data[cell_position] = cell.value
-
                 # Filter string-formulas that are at least 15 characters long and the complex formula doesn't already exist in that file
                   if len(cell.value) > 40 and cell.value not in complex_formula_data.values():
-
                     # Using class.formula.Formula class to store the complex Formulas
                     complex_formula_data[cell_position] = cell.value
-
                 # Catch any non-string formulas and print to console what they are
                 else:
                   print(f"Potential non-string formula: {cell.value}")
