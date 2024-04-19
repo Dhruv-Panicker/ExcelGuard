@@ -100,6 +100,7 @@ def get_author_data(scan_id, ExcelFile):
   
   for file in files:
     author_data[file.id] = {
+      "file_name": file.file_name,
       "created": file.created,
       "creator": file.creator,
       "modified": file.modified,
