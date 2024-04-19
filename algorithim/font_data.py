@@ -2,6 +2,7 @@ from collections import Counter
 # A list of 25 commonly used fonts in excel
 COMMON_EXCEL_FONTS = {
   "Calibri",
+  "Calibri (Body)",
   "Calibri Light",
   "Arial",
   "Times New Roman",
@@ -41,8 +42,14 @@ def check_font_data(font_data, db, ExcelFile, template_data):
 
   for file_id, fonts in font_data.items():
     similar_fonts = [font for font in set(fonts) if font in duplicate_uncommon_fonts]
-    font_count = len(similar_fonts)
-    suspicious_fonts[file_id] = ("font_data", similar_fonts, font_count)
+    if len(similar_fonts) < 1:
+      severity_score = 0
+    elif len(similar_fonts) < 3:
+      severity_score = 1
+    else:
+      severity_score = 3
+    suspicious_fonts[file_id] = ("font_data", similar_fonts, severity_score)
+
     try:
       excel_file = db.session.query(ExcelFile).filter_by(id=file_id).first()
       if excel_file:
@@ -51,4 +58,5 @@ def check_font_data(font_data, db, ExcelFile, template_data):
     except Exception as e:
       db.session.rollback()
       print("Error updating excel file font data results attribute:", e)
+
   return suspicious_fonts
