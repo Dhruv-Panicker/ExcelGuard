@@ -40,7 +40,7 @@ def check_formula_data(formula_data, db, ExcelFile):
     tokenized_comp_formulas = {}
 
     for file_id, formulas in formula_data.items():
-
+        file_name = ExcelFile.query.get(file_id).file_name
         # Flagged messages list for each file
         flagged_messages = []
 
@@ -49,7 +49,7 @@ def check_formula_data(formula_data, db, ExcelFile):
 
         # Compare with each other file in the associated scan
         for file_id_comp, formulas_comp in formula_data.items():
-
+            file_comp_name = ExcelFile.query.get(file_id_comp).file_name
             # Compare with each other file (not itself)
             if file_id != file_id_comp:
 
@@ -59,14 +59,12 @@ def check_formula_data(formula_data, db, ExcelFile):
                 # Check for matches between the two files
                 matching_tokens = find_matching_token_lists(tokenized_formulas, tokenized_comp_formulas)
 
-                print(f"Matching formulas found in {file_id}: {matching_tokens}")
-
                 # If matches exists
                 if matching_tokens:
 
                     # For each match create a flagged message
                     for match in matching_tokens:
-                        flagged_messages.append(f"File {file_id} and {file_id_comp} share similar formula structures in cells {match[0]}, {match[1]} with formulas: ({formulas[match[0]]}), ({formulas_comp[match[1]]}).")
+                        flagged_messages.append(f"File {file_name} and {file_comp_name} share similar formula structures in cells {match[0]}, {match[1]} with formulas: ({formulas[match[0]]}), ({formulas_comp[match[1]]}).")
 
         num_of_flags = len(flagged_messages)
         suspicious_formulas[file_id] = (flagged_messages, num_of_flags)
