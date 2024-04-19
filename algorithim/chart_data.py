@@ -17,10 +17,13 @@ def check_chart_data(chart_data, db, ExcelFile):
       # Check if the y source filename matches any file ID
       if y_source_filename in file_names:
         flagged_messages.append(f"Chart '{chart_name}' has a matching y source filename with file '{y_source_filename}'.")
-    
-    count_of_flagged_messages = len(flagged_messages)
-    suspicious_charts[file_id] = ("chart_data", flagged_messages, count_of_flagged_messages)
-    
+
+    if len(flagged_messages) > 0:
+      severity_score = 3
+    else:
+      severity_score = 0
+    suspicious_charts[file_id] = ("chart_data", flagged_messages, severity_score)
+
     try:
       excel_file = db.session.query(ExcelFile).filter_by(id=file_id).first()
       if excel_file:
