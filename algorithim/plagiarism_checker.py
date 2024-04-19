@@ -38,15 +38,14 @@ def perform_checks(scan_id, db, ExcelFile, ExcelChart, TemplateFile):
         else:
           all_scores[key] = [value]
 
-  # Weights of each component on a scale of 1-10 
+  # Weights of each component on a scale of 1-3, with 1 being low importance and 3 being high importance
   weights = {
     "fingerprint": 3,
-    "column_width": 2,
-    "author_data": 2,
-    "shape_data": 2,
-    "font_data": 1,
     "chart_data": 3,
-    "formula_data": 2
+    "author_data": 2,
+    "formula_data": 2,
+    "font_data": 1,
+    "column_width": 1
   }
   final_scores = {}
 
@@ -60,6 +59,16 @@ def perform_checks(scan_id, db, ExcelFile, ExcelChart, TemplateFile):
         component_type, reason, score = detail
         final_scores[file]["reasons"].append(reason)
         final_scores[file]["score"] += score * weights[component_type]
+
+    try:
+      excel_file = db.session.query(ExcelFile).filter_by(id=file).first()
+      if excel_file:
+        excel_file.plagiarism_percentage = final_scores[file]["score"]
+        db.session.commit()
+    except Exception as e:
+      db.session.rollback()
+      print("Error updating excel file author data results attribute:", e)
+
   # Rank files based on the total score
   ranked_files = sorted(final_scores.items(), key=lambda x: x[1]['score'], reverse=True)
   ranked_files_dict = {file: details for file, details in ranked_files}
@@ -67,20 +76,22 @@ def perform_checks(scan_id, db, ExcelFile, ExcelChart, TemplateFile):
   return ranked_files_dict
 
 def get_fingerprint_data(scan_id, ExcelFile):
-    files = ExcelFile.query.filter_by(scan_id=scan_id).all()
-    fingerprint_data = {}
+  files = ExcelFile.query.filter_by(scan_id=scan_id).all()
+  fingerprint_data = {}
 
-    for file in files: 
-      author_data = {
-        "creator": file.created
-      }
-      formula_data = file.complex_formulas_list 
+  for file in files: 
+    author_data = {
+      "file_name": file.file_name,
+      "creator": file.created
+    }
+    formula_data = file.complex_formulas_list 
 
-      fingerprint_data[file.id] = {
-        "author_data": author_data, 
-        "formula_data": formula_data, 
-      }
-    return fingerprint_data
+    fingerprint_data[file.id] = {
+      "author_data": author_data, 
+      "formula_data": formula_data, 
+    }
+
+  return fingerprint_data
 
 def get_column_width_data(scan_id, ExcelFile):
   # Query all excel_files which have the scan_id
@@ -91,7 +102,11 @@ def get_column_width_data(scan_id, ExcelFile):
     unique_column_width_list = file.unique_column_width_list
     
     # Add the file name and its unique column width list to the column_data dictionary
-    column_width_data[file.id] = unique_column_width_list
+    column_width_data[file.id] = {
+      "file_name": file.file_name,
+      "column_widths": unique_column_width_list
+    }
+
   return column_width_data
 
 def get_author_data(scan_id, ExcelFile):
@@ -106,6 +121,7 @@ def get_author_data(scan_id, ExcelFile):
       "modified": file.modified,
       "lastModifiedBy": file.last_modified_by
       }
+
   return author_data
 
 def get_font_data(scan_id, ExcelFile):
@@ -114,11 +130,13 @@ def get_font_data(scan_id, ExcelFile):
   
   for file in files:
     font_data[file.id] = file.unique_font_names_list
+
   return font_data
 
 def get_chart_data(scan_id, ExcelFile, ExcelChart):
   files = ExcelFile.query.filter_by(scan_id=scan_id).all()
   chart_data = {}
+
   for file in files:
     # Get theExcelCharts for the current ExcelFile
     charts = ExcelChart.query.filter_by(excel_file_id=file.id).all()
@@ -158,6 +176,7 @@ def get_chart_data(scan_id, ExcelFile, ExcelChart):
         "y_source_filename": y_source_filename
       }
       chart_data[file.id][chart.chart_name] = chart_info
+
   return chart_data
 
 def get_formula_data(scan_id, ExcelFile):
@@ -170,21 +189,21 @@ def get_formula_data(scan_id, ExcelFile):
 
 # Function that will get all data from the template file from db 
 def get_template_file_data(scan_id, TemplateFile):
-    template_file = TemplateFile.query.filter_by(scan_id=scan_id).first()
+  template_file = TemplateFile.query.filter_by(scan_id=scan_id).first()
 
-    if template_file: 
-      author_data = {
-        "created": template_file.created,
-        "creator": template_file.creator,
-        }
-      column_data = template_file.unique_column_width_list
-      font_data = template_file.unique_font_names_list
-
-      template_file_data = {
-        "author_data": author_data,
-        "column_data": column_data,
-        "font_data": font_data,
+  if template_file: 
+    author_data = {
+      "created": template_file.created,
+      "creator": template_file.creator,
       }
-      return template_file_data
-    else: 
-      return None 
+    column_data = template_file.unique_column_width_list
+    font_data = template_file.unique_font_names_list
+
+    template_file_data = {
+      "author_data": author_data,
+      "column_data": column_data,
+      "font_data": font_data,
+    }
+    return template_file_data
+  else: 
+    return None 
