@@ -414,6 +414,7 @@ def extract_formula_data(excel_file):
         assignment_files_folder = "scan_assignment_uploads"
         assignment_file_path = os.path.join(assignment_files_folder, excel_file.filename)
         excel_workbook = load_workbook(assignment_file_path)
+
         for sheet_name in excel_workbook.sheetnames:
           excel_sheet = excel_workbook[sheet_name]
           for row in excel_sheet.iter_rows(min_row=1, max_col=excel_sheet.max_column, max_row=excel_sheet.max_row):
@@ -423,10 +424,10 @@ def extract_formula_data(excel_file):
 
                 # Filter string-formulas (BUG: DataTableFormulas throw SQL insertion errors)
                 if isinstance(cell.value, str):
-                  file_formula_data[cell_position] = cell.value
+                  #file_formula_data[cell_position] = cell.value
 
-                # Filter string-formulas that are at least 8 characters long
-                  if len(cell.value) > 7:
+                # Filter string-formulas that are at least 15 characters long and the complex formula doesn't already exist in that file
+                  if len(cell.value) > 40 and cell.value not in complex_formula_data.values():
 
                     # Using class.formula.Formula class to store the complex Formulas
                     complex_formula_data[cell_position] = cell.value
