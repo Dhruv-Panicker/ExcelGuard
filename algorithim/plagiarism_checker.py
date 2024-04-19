@@ -20,13 +20,12 @@ def perform_checks(scan_id, db, ExcelFile, ExcelChart, TemplateFile):
   formula_data = get_formula_data(scan_id, ExcelFile)
 
   # Calculate scores from each individual check
-  chart_data_scores = 0
   fingerprint_score = check_fingerprint_data(fingerprint_data, db, ExcelFile)
   column_width_score = check_column_width_data(column_width_data, db, ExcelFile, template_data["column_data"] if template_data else [])
   author_data_score = check_author_data(author_data, db, ExcelFile, template_data["author_data"] if template_data else None)
   font_component_score = check_font_data(font_data, db, ExcelFile, template_data)
   chart_component_score = check_chart_data(chart_data, db, ExcelFile)
-  formula_data_score = check_formula_data(formula_data)
+  formula_data_score = check_formula_data(formula_data, db, ExcelFile)
 
   # Combine scores from all components 
   all_scores = {}
@@ -76,7 +75,7 @@ def perform_checks(scan_id, db, ExcelFile, ExcelChart, TemplateFile):
   return ranked_files_dict
 
 def get_fingerprint_data(scan_id, ExcelFile):
-  files = ExcelFile.query.filter_by(scan_id=scan_id).all()
+  files = ExcelFile.query.filter_by(scan_id=scan_id).all() # Get all files associated with that scan
   fingerprint_data = {}
 
   for file in files: 

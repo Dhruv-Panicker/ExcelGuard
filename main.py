@@ -20,6 +20,9 @@ from typing import List
 import pythoncom
 # Since this is needed to extract data on charts, the application MUST be running on Windows
 import win32com.client as client
+
+from algorithim.formula_data import *
+from classes.formula import Formula
 from algorithim.plagiarism_checker import perform_checks
 
 app = Flask(__name__)
@@ -209,16 +212,16 @@ def begin_scan():
         os.makedirs(assignment_files_folder, exist_ok=True)
         assignment_file_path = os.path.join(assignment_files_folder, file.filename)
         file.save(assignment_file_path)
-        
+
         author_data[file.filename] = extract_author_data(file)
         column_data[file.filename] = extract_column_data(file)
         font_data[file.filename] = extract_font_data(file)
         formula_data[file.filename] = extract_formula_data(file)
         chart_data[file.filename] = extract_chart_data(file)
-        
+
         # Create a new excel_file record and get it's id
         excel_file_id = create_excel_file_record(file, new_scan.id, author_data[file.filename], font_data[file.filename], column_data[file.filename], formula_data[file.filename])
-        
+
         # Create new excel_chart records for the corresponding excel_file
         create_excel_chart_record(chart_data[file.filename], excel_file_id)
         
@@ -227,6 +230,8 @@ def begin_scan():
 
       except Exception as e:
         return f"Error  the file: {str(e)}"
+
+
 
   return redirect(url_for(".scan_results", scan_id=new_scan.id))
 
@@ -301,6 +306,7 @@ def load_user(user_id):
 
 if __name__ == "__main__":
   app.run(host="127.0.0.1", Pport=8080, debug=True)
+
 
 def extract_column_data(excel_file):
   file_column_data = set()
@@ -424,7 +430,7 @@ def extract_formula_data(excel_file):
 
                 # Filter string-formulas (BUG: DataTableFormulas throw SQL insertion errors)
                 if isinstance(cell.value, str):
-                  # Filter string-formulas that are at least 15 characters long and the complex formula doesn't already exist in that file
+                # Filter string-formulas that are at least 15 characters long and the complex formula doesn't already exist in that file
                   if len(cell.value) > 40 and cell.value not in complex_formula_data.values():
                     # Using class.formula.Formula class to store the complex Formulas
                     complex_formula_data[cell_position] = cell.value
