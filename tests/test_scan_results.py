@@ -20,11 +20,11 @@ def test_get_fingerprint_results():
   with app.app_context(): 
     with patch('test_scan_results.db.session') as mock_db, \
       patch('test_scan_results.ExcelFile') as mock_ExcelFile:
-        scan_id = 58  # Example scan_id
+        scan_id = 49  # Example scan_id
         data = get_fingerprint_data(scan_id, ExcelFile)
         flagged_files = check_fingerprint_data(data, db, ExcelFile)
-        assert ('campbellclara_Assignment_copied - Clara Campbell.xlsx', 'matched_fingerprint_with:campbellclara_11094_313000_Assignment 1 - Clara Campbell.xlsx') in flagged_files
-        assert ('campbellclara_11094_313000_Assignment 1 - Clara Campbell.xlsx', 'matched_fingerprint_with:campbellclara_Assignment_copied - Clara Campbell.xlsx') in flagged_files 
+        assert ('fingerprint', 'matched_fingerprint_with:campbellclara_11094_313000_Assignment 1 - Clara Campbell.xlsx', 3) in flagged_files
+        assert ('fingerprint', 'matched_fingerprint_with:campbellclara_Assignment_copied - Clara Campbell.xlsx', 3) in flagged_files 
         assert not mock_db.session.query.called
         assert not mock_db.session.commit.called
         assert not mock_db.session.rollback.called
