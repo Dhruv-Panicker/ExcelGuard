@@ -19,42 +19,36 @@ def test_get_fingerprint_data(test_client):
     scan_id = 56  # Example scan_id
     data = get_fingerprint_data(scan_id, ExcelFile)
     assert isinstance(data, dict)  # Ensure it returns a dictionary
-    print("Fingerprint Data:", data)
 
 def test_get_column_width_data(test_client):
   with app.app_context(): 
     scan_id = 56  # Example scan_id
     data = get_column_width_data(scan_id, ExcelFile)
     assert isinstance(data, dict)  # Ensure it returns a dictionary
-    print("Column Width Data:", data)
 
 def test_get_author_data(test_client):
   with app.app_context(): 
     scan_id = 56  # Example scan_id
     data = get_author_data(scan_id, ExcelFile)
     assert isinstance(data, dict)  # Ensure it returns a dictionary
-    print("Author Data:", data)
 
 def test_get_font_data(test_client):
   with app.app_context(): 
     scan_id = 56  # Example scan_id
     data = get_font_data(scan_id, ExcelFile)
     assert isinstance(data, dict)  # Ensure it returns a dictionary
-    print("Font Data:", data)
 
 def test_get_formula_data(test_client):
   with app.app_context(): 
     scan_id = 56  # Example scan_id
     data = get_formula_data(scan_id, ExcelFile)
     assert isinstance(data, dict)  # Ensure it returns a dictionary
-    print("Formula Data:", data)
         
 def test_get_chart_data(test_client):
   with app.app_context(): 
     scan_id = 56  # Example scan_id
     data = get_chart_data(scan_id, ExcelFile, ExcelChart)
     assert isinstance(data, dict)  # Ensure it returns a dictionary
-    print("Formula Data:", data)
 
 if __name__ == "__main__":
   pytest.main()

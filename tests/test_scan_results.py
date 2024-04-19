@@ -22,4 +22,3 @@ def test_get_fingerprint_results(test_client):
         flagged_files = check_fingerprint_data(data)
         assert ('campbellclara_Assignment_copied - Clara Campbell.xlsx', 'matched_fingerprint_with:campbellclara_11094_313000_Assignment 1 - Clara Campbell.xlsx') in flagged_files
         assert ('campbellclara_11094_313000_Assignment 1 - Clara Campbell.xlsx', 'matched_fingerprint_with:campbellclara_Assignment_copied - Clara Campbell.xlsx') in flagged_files 
-        print("Fingerprint Data:", flagged_files)
