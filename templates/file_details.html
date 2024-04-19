@@ -15,11 +15,70 @@
   {% block content %}
   <div class="container">
     <a href="{{ url_for('scan_results', scan_id=file.scan_id) }}" class="btn btn-primary float-right">Back to Scan Results</a>
+    {% if suspicious_fingerprint_data %}
+      {% if suspicious_fingerprint_data[2] > 0 %}
+        <h3 class="text-light">Suspicious File Fingerprint Data has been found!</h3>
+        <ul>
+          {% if suspicious_fingerprint_data[1] is iterable and suspicious_fingerprint_data[1] is not string %}
+            {% for string in suspicious_fingerprint_data[1] %}
+              <li class="text-light">{{ string }}</li>
+            {% endfor %}
+          {% else %}
+            <li class="text-light">{{ suspicious_fingerprint_data[1] }}</li>
+          {% endif %}
+        </ul>
+        <br>
+      {% endif %}
+    {% endif %}
     {% if suspicious_charts %}
-      {% if suspicious_charts[1] > 0%}
+      {% if suspicious_charts[2] > 1 %}
         <h3 class="text-light">Suspicious Charts have been found!</h3>
         <ul>
-          {% for string in suspicious_charts[0] %}
+          {% for string in suspicious_charts[1] %}
+            <li class="text-light">{{ string }}</li>
+          {% endfor %}
+        </ul>
+        <br>
+      {% endif %}
+    {% endif %}
+    {% if suspicious_formulas %}
+      {% if suspicious_formulas[2] > 0 %}
+        <h3 class="text-light">Suspicious Formulas have been found!</h3>
+        <ul>
+          {% for string in suspicious_formulas[1] %}
+            <li class="text-light">{{ string }}</li>
+          {% endfor %}
+        </ul>
+        <br>
+      {% endif %}
+    {% endif %}
+    {% if suspicious_author_data %}
+      {% if suspicious_author_data[2] > 0 %}
+        <h3 class="text-light">Suspicious File Author Data have been found!</h3>
+        <ul>
+          {% for string in suspicious_author_data[1] %}
+            <li class="text-light">{{ string }}</li>
+          {% endfor %}
+        </ul>
+        <br>
+      {% endif %}
+    {% endif %}
+    {% if suspicious_column_widths %}
+      {% if suspicious_column_widths[2] > 0 %}
+        <h3 class="text-light">Suspicious File Column Widths have been found!</h3>
+        <ul>
+          {% for string in suspicious_column_widths[1] %}
+            <li class="text-light">{{ string }}</li>
+          {% endfor %}
+        </ul>
+        <br>
+      {% endif %}
+    {% endif %}
+    {% if suspicious_fonts %}
+      {% if suspicious_fonts[2] > 0 %}
+        <h3 class="text-light">Suspicious Fonts have been found!</h3>
+        <ul>
+          {% for string in suspicious_fonts[1] %}
             <li class="text-light">{{ string }}</li>
           {% endfor %}
         </ul>
