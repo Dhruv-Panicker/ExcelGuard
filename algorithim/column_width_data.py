@@ -12,8 +12,8 @@ def check_column_width_data(file_column_data, db, ExcelFile, template_column_dat
   file_combinations = combinations(file_column_data.keys(), 2)
 
   for file_id1, file_id2 in file_combinations:
-    columns1 = file_column_data[file_id1]
-    columns2 = file_column_data[file_id2]
+    columns1 = file_column_data[file_id1]["column_widths"]
+    columns2 = file_column_data[file_id2]["column_widths"]
     # Filter columns to only include "oddly sized" widths not in the template
     odd_columns1 = set(filter(is_oddly_sized, columns1)) - template_column_set
     odd_columns2 = set(filter(is_oddly_sized, columns2)) - template_column_set
@@ -27,7 +27,8 @@ def check_column_width_data(file_column_data, db, ExcelFile, template_column_dat
         if file_id not in suspicious_files:
           suspicious_files[file_id] = ("column_width", [], 0)
           other_file_id = file_id2 if file_id == file_id1 else file_id1
-          reason = f"Same column width {common_columns_list} as {other_file_id}"
+          other_file_name = file_column_data[other_file_id]["file_name"]
+          reason = f"Same column widths {common_columns_list} as {other_file_name}"
         # Append the reason and update the score
           suspicious_files[file_id] = list(suspicious_files[file_id])  # convert tuple to list to modify
           suspicious_files[file_id][1].append(reason)
