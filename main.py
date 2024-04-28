@@ -181,7 +181,8 @@ def index():
 @login_required
 def scan_list(): 
   PREVIOUS_SCANS_LIST_LIMIT = 5
-  previous_scans_list = Scan.query.order_by(Scan.date_created.desc()).limit(PREVIOUS_SCANS_LIST_LIMIT).all()
+  previous_scans_list = Scan.query.filter_by(user_created_by=current_user.username).order_by(Scan.date_created.desc()).limit(PREVIOUS_SCANS_LIST_LIMIT).all()
+
 
   return render_template("scan_list.html", previous_scans=previous_scans_list)
 
