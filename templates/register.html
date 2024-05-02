@@ -19,14 +19,18 @@
     <form method="POST" action="">
       {{ form.hidden_tag() }}
       <div class="form-group">
-        {{ form.username.label(class="sr-only") }}
-        {{ form.username(class="form-control", placeholder="Username") }}
-        <span class="asterisk">*</span>
+        <div class="form-inline">
+          {{ form.username.label(class="sr-only") }}
+          {{ form.username(class="form-control col-12", placeholder="Username") }}
+          <span class="asterisk"></span>
+        </div>
       </div>
       <div class="form-group">
-        {{ form.password.label(class="sr-only") }}
-        {{ form.password(class="form-control", placeholder="Password") }}
-        <span class="asterisk">*</span>
+        <div class="form-inline">
+          {{ form.password.label(class="sr-only") }}
+          {{ form.password(class="form-control col-12", placeholder="Password") }}
+          <span class="asterisk"></span>
+        </div>
       </div>
       <div class="text-center">
         <button type="submit" class="btn bg-yellow"><strong>Register  <span class="fas fa-arrow-right"></span></strong></button>
