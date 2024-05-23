@@ -131,7 +131,7 @@ with app.app_context():
   db.create_all()
 
 @app.route("/login", methods=["GET", "POST"])
-def login(): 
+def login():
   form = LoginForm()
   login_status = ""
   if form.validate_on_submit():
@@ -154,6 +154,7 @@ def logout():
 def register():
   form = RegistrationForm()
 
+  registration_status = ""
   if form.validate_on_submit():
     hashed_password = bcrypt.generate_password_hash(form.password.data)
     new_user = User(username=form.username.data, password=hashed_password)
@@ -162,13 +163,10 @@ def register():
     try:
       db.session.commit()
       registration_status = "success"
-      return render_template("login.html", registration_status=registration_status)
+      return redirect(url_for("login"))
     except Exception as e:
       db.session.rollback()
       registration_status = "failure"
-  else:
-    registration_status = "failure"
-
   return render_template("register.html", form=form, registration_status=registration_status)
 
 @app.route('/')
