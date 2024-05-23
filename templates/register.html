@@ -35,10 +35,16 @@
       <div class="text-center">
         <button type="submit" class="btn bg-yellow"><strong>Register  <span class="fas fa-arrow-right"></span></strong></button>
       </div>
+      {% if registration_status == "failure" %}
+        <div class="text-center">
+          <br><strong><span class="text-danger">There was an issue registering your account.</span></strong>
+          <br><strong><span class="text-danger">Please try again.</span></strong>
+        </div>
+      {% endif %}
+      <div class="text-center">
+        <br><strong><span class="text-light">Already have an account? <a href="{{url_for('login')}}">Login</a></span></strong>
+      </div>
     </form>
-    <div class="text-center mt-3">
-      <br><strong><span class="text-light">Already have an account? <a href="{{url_for('login')}}">Login</a></span></strong>
-    </div>
   </div>
 </div>
 {% endblock %}
