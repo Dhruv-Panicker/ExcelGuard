@@ -52,9 +52,9 @@
             <td>{{file.submitted_date}}</td>
             <td>{{file.plagiarism_percentage}}</td>
             {% if file.plagiarism_percentage > 9 %}
-              <td><span class="fas fa-flag text-danger"></td>  
+              <td><span class="fas fa-flag text-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="This file contains many instances of potential plagiarism."></td>  
             {% elif file.plagiarism_percentage > 4 %}
-              <td><span class="fas fa-flag text-warning"></td>  
+              <td><span class="fas fa-flag text-warning" data-bs-toggle="tooltip" data-bs-placement="top" title="This file contains a few instances of potential plagiarism."></td>  
             {% else %}
               <td></td>
             {% endif %}
