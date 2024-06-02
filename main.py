@@ -131,16 +131,17 @@ with app.app_context():
   db.create_all()
 
 @app.route("/login", methods=["GET", "POST"])
-def login(): 
+def login():
   form = LoginForm()
+  login_status = ""
   if form.validate_on_submit():
+    login_status = "failure"
     user = User.query.filter_by(username=form.username.data).first()
     if user: 
       if bcrypt.check_password_hash(user.password, form.password.data):
         login_user(user)
         return redirect(url_for("scan_list"))
-
-  return render_template("login.html", form=form)
+  return render_template("login.html", form=form, login_status=login_status)
 
 @app.route("/logout", methods=["GET", "POST"])
 @login_required
@@ -153,6 +154,7 @@ def logout():
 def register():
   form = RegistrationForm()
 
+  registration_status = ""
   if form.validate_on_submit():
     hashed_password = bcrypt.generate_password_hash(form.password.data)
     new_user = User(username=form.username.data, password=hashed_password)
@@ -160,17 +162,12 @@ def register():
     db.session.add(new_user)
     try:
       db.session.commit()
-      print("User added successfully")  # Debugging message
+      registration_status = "success"
+      return redirect(url_for("login"))
     except Exception as e:
       db.session.rollback()
-      print("Failed to add user:", e) 
-      return redirect(url_for("login"))
-  else:
-    print("Form not validated")  # Debugging message
-    print(form.errors)         
-  print("Database file path:", os.path.join(os.getcwd(), "database.db"))
-
-  return render_template("register.html", form=form)
+      registration_status = "failure"
+  return render_template("register.html", form=form, registration_status=registration_status)
 
 @app.route('/')
 def index():

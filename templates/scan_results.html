@@ -9,8 +9,7 @@
       <!-- Bootstrap CSS -->
       <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
       <!-- Awesome Fonts Icons-->
-      <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.0/css/all.css" integrity="sha384-lZN37f5QGtY3VHgisS14W3ExzMWZxybE1SJSEsQp9S+oqd12jhcu+A56Ebc1zFSJ" crossorigin="anonymous">
-  
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.7.0/css/all.min.css">
       <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css') }}">
   {% endblock %}
   {% block content %}
@@ -32,7 +31,7 @@
             <th>Filename</th>
             <th>Student</th>
             <th>Submitted Date</th>
-            <th>Score</th>
+            <th>Score <span class="fa fa-info-circle" data-bs-toggle="tooltip" data-bs-placement="top" title="The suspiciousness 'score' of a file represents a weighted sum of all instances of possible plagiarism in each 'section' of the Excel file."></span></th>
             <th><span class="fas fa-flag text-danger"></span></th>
             <th></th>
           </tr>
@@ -52,9 +51,9 @@
             <td>{{file.submitted_date}}</td>
             <td>{{file.plagiarism_percentage}}</td>
             {% if file.plagiarism_percentage > 9 %}
-              <td><span class="fas fa-flag text-danger"></td>  
+              <td><span class="fas fa-flag text-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="This file contains many instances of potential plagiarism."></td>  
             {% elif file.plagiarism_percentage > 4 %}
-              <td><span class="fas fa-flag text-warning"></td>  
+              <td><span class="fas fa-flag text-warning" data-bs-toggle="tooltip" data-bs-placement="top" title="This file contains a few instances of potential plagiarism."></td>  
             {% else %}
               <td></td>
             {% endif %}

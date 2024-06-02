@@ -16,25 +16,35 @@
 <div class="bg-dark-green">
   <div class="form-signin">
     <h1 class="text-light mb-5">Register Account</h1>
-    <form method="POST" action="">
+    <form method="POST" action="/register">
       {{ form.hidden_tag() }}
       <div class="form-group">
-        {{ form.username.label(class="sr-only") }}
-        {{ form.username(class="form-control", placeholder="Username") }}
-        <span class="asterisk">*</span>
+        <div class="form-inline">
+          {{ form.username.label(class="sr-only") }}
+          {{ form.username(class="form-control col-12", placeholder="Username") }}
+          <span class="asterisk"></span>
+        </div>
       </div>
       <div class="form-group">
-        {{ form.password.label(class="sr-only") }}
-        {{ form.password(class="form-control", placeholder="Password") }}
-        <span class="asterisk">*</span>
+        <div class="form-inline">
+          {{ form.password.label(class="sr-only") }}
+          {{ form.password(class="form-control col-12", placeholder="Password") }}
+          <span class="asterisk"></span>
+        </div>
       </div>
       <div class="text-center">
         <button type="submit" class="btn bg-yellow"><strong>Register  <span class="fas fa-arrow-right"></span></strong></button>
       </div>
+      {% if registration_status == "failure" %}
+        <div class="text-center">
+          <br><strong><span class="text-danger">There was an issue registering your account.</span></strong>
+          <br><strong><span class="text-danger">Please try again.</span></strong>
+        </div>
+      {% endif %}
+      <div class="text-center">
+        <br><strong><span class="text-light">Already have an account? <a href="{{url_for('login')}}">Login</a></span></strong>
+      </div>
     </form>
-    <div class="text-center mt-3">
-      <br><strong><span class="text-light">Already have an account? <a href="{{url_for('login')}}">Login</a></span></strong>
-    </div>
   </div>
 </div>
 {% endblock %}
